@@ -344,12 +344,14 @@ printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":2,"adapter":{
             r#"#!/bin/sh
 read -r line
 printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":1,"adapter":{"name":"other","version":"0.1.0","runtime":"sh"},"capabilities":{"languages":[],"extensions":[],"relationships":[]}}}'
+read -r line
 "#,
         );
-        assert!(matches!(
-            AdapterClient::start(options(command, Duration::from_secs(5))),
-            Err(AdapterError::IdentityMismatch { .. })
-        ));
+        match AdapterClient::start(options(command, Duration::from_secs(5))) {
+            Err(AdapterError::IdentityMismatch { .. }) => {}
+            Err(error) => panic!("expected an identity mismatch, received {error:?}"),
+            Ok(_) => panic!("expected an identity mismatch, adapter initialized"),
+        }
     }
 
     #[test]
