@@ -1,0 +1,129 @@
+name: Publish Homebrew
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable release tag to publish to Homebrew
+        required: true
+        default: v0.1.1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-homebrew-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - id: version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          version=$(node scripts/release-version.mjs "$RELEASE_TAG")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+      - name: Download and verify published release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          mkdir -p dist
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'vibedoc-*.tar.gz' --pattern SHA256SUMS --dir dist
+          cd dist
+          sha256sum --check SHA256SUMS
+      - name: Generate formula
+        run: |
+          node scripts/generate-homebrew-formulae.mjs --version "${{ steps.version.outputs.version }}" --checksums dist/SHA256SUMS --output generated-homebrew/Formula
+          ruby -c generated-homebrew/Formula/vibedoc.rb
+      - uses: actions/upload-artifact@v7
+        with:
+          name: homebrew-formulae
+          path: generated-homebrew/Formula/*.rb
+          if-no-files-found: error
+
+  test-homebrew:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - macos-15
+          - macos-15-intel
+          - ubuntu-22.04-arm
+          - ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: Homebrew/actions/setup-homebrew@a657b8b0cd35d0f65cce41fce9b24cf054b49869
+        with:
+          core: true
+          cask: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: homebrew-formulae
+          path: generated-homebrew/Formula
+      - name: Install generated formulae
+        env:
+          GIT_AUTHOR_NAME: vibedoc-homebrew-test
+          GIT_AUTHOR_EMAIL: vibedoc-homebrew-test@users.noreply.github.com
+          GIT_COMMITTER_NAME: vibedoc-homebrew-test
+          GIT_COMMITTER_EMAIL: vibedoc-homebrew-test@users.noreply.github.com
+        run: |
+          brew tap-new schwick3/tap
+          tap_directory=$(brew --repository schwick3/tap)
+          cp generated-homebrew/Formula/*.rb "$tap_directory/Formula/"
+          brew readall --os=all --arch=all schwick3/tap
+          brew audit --strict schwick3/tap/vibedoc
+          brew install schwick3/tap/vibedoc
+          brew test schwick3/tap/vibedoc
+      - name: Run installed tool against the evaluation project
+        working-directory: tests/projects/task-service
+        run: |
+          vibedoc doctor --format json
+          vibedoc check
+      - name: Uninstall generated formulae
+        if: always()
+        run: brew uninstall --force schwick3/tap/vibedoc || true
+
+  publish-tap:
+    needs: [prepare, test-homebrew]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: Schwick3/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+      - uses: actions/download-artifact@v8
+        with:
+          name: homebrew-formulae
+          path: generated-homebrew/Formula
+      - name: Publish formulae atomically
+        working-directory: homebrew-tap
+        run: |
+          mkdir -p Formula
+          cp ../generated-homebrew/Formula/*.rb Formula/
+          git config user.name "vibedoc-release-bot"
+          git config user.email "vibedoc-release-bot@users.noreply.github.com"
+          git add Formula
+          if git diff --cached --quiet; then
+            echo "The tap already contains Vibedoc ${{ needs.prepare.outputs.version }}."
+            exit 0
+          fi
+          git commit -m "vibedoc ${{ needs.prepare.outputs.version }}"
+          git push origin HEAD:main

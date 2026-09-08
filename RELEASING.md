@@ -81,9 +81,17 @@ not move a published release tag.
 
 If the GitHub release succeeds but formula testing or tap publication fails
 because of a transient service or credential problem, correct that external
-problem and rerun the failed jobs. The release workflow replaces existing
-assets with the newly tested artifacts and does not create a duplicate tap
-commit. Publish a new patch version when source or workflow code must change.
+problem and rerun the failed jobs.
+
+If the release assets are valid but the release workflow itself must change,
+fix the workflow on `main` and run the `Publish Homebrew` workflow with the
+existing immutable tag. This recovery workflow checks out the tag, downloads
+the published assets, verifies `SHA256SUMS`, tests the generated formula on all
+four target platforms, and updates the tap only after every test passes. It
+does not rebuild or replace release assets.
+
+Publish a new patch version when product source or a release artifact must
+change. Do not move an existing tag.
 
 If an artifact itself is defective, mark the release as withdrawn and publish
 a new patch version. Checksums in a published tap commit must never be changed
