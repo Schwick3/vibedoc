@@ -28,7 +28,7 @@ implicitly trust third-party formula dependencies.
 3. Confirm the intended tag matches every package:
 
    ```sh
-   node scripts/release-version.mjs v0.1.0
+   node scripts/release-version.mjs v0.1.1
    ```
 
 4. Run the normal checks:
@@ -52,8 +52,8 @@ implicitly trust third-party formula dependencies.
 Create and push an annotated stable-version tag:
 
 ```sh
-git tag -a v0.1.0 -m "Vibedoc v0.1.0"
-git push origin v0.1.0
+git tag -a v0.1.1 -m "Vibedoc v0.1.1"
+git push origin v0.1.1
 ```
 
 The tag workflow:

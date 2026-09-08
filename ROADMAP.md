@@ -1,6 +1,6 @@
 # Roadmap
 
-Vibedoc v0.1.0 is distributed as native macOS and Linux release archives and
+Vibedoc's initial release is distributed as native macOS and Linux archives and
 through a project-owned Homebrew tap. The TypeScript adapter is packaged
 separately but installed with the main Homebrew formula.
 

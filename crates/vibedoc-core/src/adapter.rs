@@ -111,18 +111,11 @@ pub struct AdapterClient {
 
 impl AdapterClient {
     pub fn start(options: AdapterRunOptions) -> Result<Self, AdapterError> {
-        let mut child = Command::new(&options.command)
-            .arg("--stdio")
-            .current_dir(&options.workspace_root)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::inherit())
-            .spawn()
-            .map_err(|source| AdapterError::Spawn {
-                name: options.name.clone(),
-                path: options.command.clone(),
-                source,
-            })?;
+        let mut child = spawn_adapter(&options).map_err(|source| AdapterError::Spawn {
+            name: options.name.clone(),
+            path: options.command.clone(),
+            source,
+        })?;
         let input = child.stdin.take().expect("piped adapter stdin");
         let stdout = child.stdout.take().expect("piped adapter stdout");
         let (sender, output) = mpsc::channel();
@@ -244,6 +237,36 @@ impl AdapterClient {
     }
 }
 
+fn spawn_adapter(options: &AdapterRunOptions) -> Result<Child, std::io::Error> {
+    const RETRY_DELAYS: [Duration; 4] = [
+        Duration::from_millis(10),
+        Duration::from_millis(20),
+        Duration::from_millis(40),
+        Duration::from_millis(80),
+    ];
+
+    for delay in RETRY_DELAYS {
+        match adapter_command(options).spawn() {
+            Err(error) if error.kind() == std::io::ErrorKind::ExecutableFileBusy => {
+                thread::sleep(delay);
+            }
+            result => return result,
+        }
+    }
+    adapter_command(options).spawn()
+}
+
+fn adapter_command(options: &AdapterRunOptions) -> Command {
+    let mut command = Command::new(&options.command);
+    command
+        .arg("--stdio")
+        .current_dir(&options.workspace_root)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit());
+    command
+}
+
 impl Drop for AdapterClient {
     fn drop(&mut self) {
         if self.child.try_wait().ok().flatten().is_none() {
@@ -352,6 +375,40 @@ read -r line
             Err(error) => panic!("expected an identity mismatch, received {error:?}"),
             Ok(_) => panic!("expected an identity mismatch, adapter initialized"),
         }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn retries_a_temporarily_busy_adapter_executable() {
+        let directory = tempfile::tempdir().unwrap();
+        let command = directory.path().join("adapter");
+        let mut file = fs::OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .open(&command)
+            .unwrap();
+        file.write_all(
+            br#"#!/bin/sh
+read -r line
+printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":1,"adapter":{"name":"other","version":"0.1.1","runtime":"sh"},"capabilities":{"languages":[],"extensions":[],"relationships":[]}}}'
+read -r line
+"#,
+        )
+        .unwrap();
+        file.sync_all().unwrap();
+        let mut permissions = fs::metadata(&command).unwrap().permissions();
+        permissions.set_mode(0o755);
+        fs::set_permissions(&command, permissions).unwrap();
+
+        let release_file = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(25));
+            drop(file);
+        });
+        let result = AdapterClient::start(options(command, Duration::from_secs(5)));
+        release_file.join().unwrap();
+
+        assert!(matches!(result, Err(AdapterError::IdentityMismatch { .. })));
     }
 
     #[test]
