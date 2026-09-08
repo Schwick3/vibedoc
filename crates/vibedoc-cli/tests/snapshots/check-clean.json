@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "tool": {
+    "name": "vibedoc",
+    "version": "0.1.0"
+  },
+  "status": "pass",
+  "diagnostics": [],
+  "verification": {
+    "verifiedStructuralClaims": 0,
+    "contradictedStructuralClaims": 0,
+    "unverifiedStructuralClaims": 0,
+    "freeFormProseEvaluated": false
+  },
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 0,
+    "documents": 1
+  }
+}

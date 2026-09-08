@@ -1,0 +1,7 @@
+README.md:3:13: warning VDOC-L002: Vague wording: `handles`.
+  help: Replace `handles`; state the exact operation.
+README.md:3:21: warning VDOC-L002: Vague wording: `things`.
+  help: Replace `things`; use a technical noun.
+0 error(s), 2 warning(s), 1 document(s)
+Structural verification: 0 verified, 0 contradicted, 0 unverified.
+Free-form prose was not factually evaluated.

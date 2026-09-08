@@ -1,0 +1,19 @@
+version = 1
+
+[[documents]]
+include = ["README.md"]
+profile = "guide"
+
+[[documents]]
+include = ["docs/reference/**/*.md"]
+profile = "reference"
+adapters = ["typescript"]
+
+[adapters.typescript]
+projects = ["tsconfig.json"]
+
+[terms."task ID"]
+forbidden = ["task identifier", "task key"]
+
+[experimental]
+prose_grounding = false

@@ -1,0 +1,11 @@
+version = 1
+
+[[documents]]
+include = ["README.md", "docs/**/*.md"]
+profile = "guide"
+
+[adapters.typescript]
+projects = ["adapters/typescript/tsconfig.json"]
+
+[experimental]
+prose_grounding = false

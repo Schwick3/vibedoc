@@ -1,0 +1,21 @@
+version = 1
+
+[[documents]]
+include = ["README.md"]
+profile = "guide"
+adapters = ["typescript"]
+
+[[documents]]
+include = ["docs/**/*.md"]
+profile = "reference"
+adapters = ["typescript"]
+
+[adapters.typescript]
+projects = ["tsconfig.json"]
+
+[experimental]
+prose_grounding = false
+
+[terms."access token"]
+forbidden = ["auth token"]
+

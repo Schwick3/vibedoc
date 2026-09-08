@@ -1,0 +1,27 @@
+{
+  "name": "vibedoc-adapter-typescript",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript and JavaScript source adapter for Vibedoc",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "vibedoc-adapter-typescript": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/**/*.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "typescript": "6.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1"
+  }
+}
