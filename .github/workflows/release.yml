@@ -1,0 +1,254 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Stable release tag to validate during the dry run
+        required: true
+        default: v0.1.0
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - id: version
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+        run: |
+          version=$(node scripts/release-version.mjs "$RELEASE_TAG")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+  quality:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: npm ci
+      - run: npm test
+      - run: ./scripts/test-e2e.sh
+      - run: ./scripts/test-evaluation.sh
+
+  build-cli:
+    needs: [prepare, quality]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            target: aarch64-apple-darwin
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+          - runner: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-musl
+          - runner: ubuntu-22.04
+            target: x86_64-unknown-linux-musl
+    runs-on: ${{ matrix.runner }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "13.0"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install musl build tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes musl-tools
+      - run: cargo build --locked --release --target "${{ matrix.target }}" --package vibedoc
+      - name: Smoke-test native binary
+        run: |
+          output=$(target/${{ matrix.target }}/release/vibedoc --version)
+          test "$output" = "vibedoc ${{ needs.prepare.outputs.version }}"
+      - run: |
+          ./scripts/package-cli.sh "${{ needs.prepare.outputs.version }}" "${{ matrix.target }}" "target/${{ matrix.target }}/release/vibedoc" dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-cli-${{ matrix.target }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  build-adapter:
+    needs: [prepare, quality]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: ./scripts/package-typescript-adapter.sh "${{ needs.prepare.outputs.version }}" dist
+      - name: Smoke-test packaged adapter
+        run: |
+          temporary=$(mktemp -d)
+          trap 'rm -rf "$temporary"' EXIT
+          tar -xzf "dist/vibedoc-adapter-typescript-v${{ needs.prepare.outputs.version }}.tar.gz" -C "$temporary"
+          output=$(printf '%s\n%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":1,"coreVersion":"${{ needs.prepare.outputs.version }}","workspaceRoot":"."}}' '{"jsonrpc":"2.0","id":2,"method":"shutdown","params":{}}' | "$temporary/dist/index.js" --stdio)
+          printf '%s\n' "$output" | grep -q '"version":"${{ needs.prepare.outputs.version }}"'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-adapter-typescript
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  assemble:
+    needs: [prepare, build-cli, build-adapter]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - run: node scripts/write-release-checksums.mjs dist/SHA256SUMS dist/*.tar.gz
+      - name: Publish GitHub release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/* --clobber
+          else
+            gh release create "$RELEASE_TAG" dist/* --verify-tag --title "Vibedoc $RELEASE_TAG" --generate-notes
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-files
+          path: dist/*
+          if-no-files-found: error
+
+  formulae:
+    needs: [prepare, assemble]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-files
+          path: dist
+      - run: |
+          node scripts/generate-homebrew-formulae.mjs --version "${{ needs.prepare.outputs.version }}" --checksums dist/SHA256SUMS --output generated-homebrew/Formula
+          ruby -c generated-homebrew/Formula/vibedoc.rb
+      - uses: actions/upload-artifact@v7
+        with:
+          name: homebrew-formulae
+          path: generated-homebrew/Formula/*.rb
+          if-no-files-found: error
+
+  test-homebrew:
+    if: github.event_name == 'push'
+    needs: [prepare, formulae]
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - macos-15
+          - macos-15-intel
+          - ubuntu-22.04-arm
+          - ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: setup-homebrew
+        uses: Homebrew/actions/setup-homebrew@a657b8b0cd35d0f65cce41fce9b24cf054b49869
+        with:
+          core: true
+          cask: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: homebrew-formulae
+          path: generated-homebrew/Formula
+      - name: Install generated formulae
+        run: |
+          brew tap-new schwick3/tap
+          tap_directory=$(brew --repository schwick3/tap)
+          cp generated-homebrew/Formula/*.rb "$tap_directory/Formula/"
+          brew readall --os=all --arch=all schwick3/tap
+          brew audit --strict schwick3/tap/vibedoc
+          brew install schwick3/tap/vibedoc
+          brew test schwick3/tap/vibedoc
+      - name: Run installed tool against the evaluation project
+        working-directory: tests/projects/task-service
+        run: |
+          vibedoc doctor --format json
+          vibedoc check
+      - name: Uninstall generated formulae
+        if: always()
+        run: |
+          brew uninstall --force schwick3/tap/vibedoc || true
+
+  publish-tap:
+    if: github.event_name == 'push'
+    needs: [prepare, test-homebrew]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: Schwick3/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+      - uses: actions/download-artifact@v8
+        with:
+          name: homebrew-formulae
+          path: generated-homebrew/Formula
+      - name: Publish formulae atomically
+        working-directory: homebrew-tap
+        run: |
+          mkdir -p Formula
+          cp ../generated-homebrew/Formula/*.rb Formula/
+          git config user.name "vibedoc-release-bot"
+          git config user.email "vibedoc-release-bot@users.noreply.github.com"
+          git add Formula
+          if git diff --cached --quiet; then
+            echo "The tap already contains Vibedoc ${{ needs.prepare.outputs.version }}."
+            exit 0
+          fi
+          git commit -m "vibedoc ${{ needs.prepare.outputs.version }}"
+          git push origin HEAD:main

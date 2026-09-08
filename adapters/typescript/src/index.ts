@@ -1,9 +1,26 @@
 #!/usr/bin/env node
 import { createInterface } from "node:readline";
+import { readFileSync } from "node:fs";
 import process from "node:process";
 import ts from "typescript";
 import { analyzeWorkspace } from "./analyzer.js";
 import { PROTOCOL_VERSION, type AnalyzeParams } from "./protocol.js";
+
+interface PackageMetadata {
+  version?: unknown;
+}
+
+function readAdapterVersion(): string {
+  const metadata = JSON.parse(
+    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+  ) as PackageMetadata;
+  if (typeof metadata.version !== "string" || metadata.version.length === 0) {
+    throw new Error("The adapter package.json does not contain a version");
+  }
+  return metadata.version;
+}
+
+const ADAPTER_VERSION = readAdapterVersion();
 
 interface Request {
   jsonrpc: string;
@@ -49,7 +66,7 @@ if (!process.argv.includes("--stdio")) {
             protocolVersion: PROTOCOL_VERSION,
             adapter: {
               name: "typescript",
-              version: "0.1.0",
+              version: ADAPTER_VERSION,
               runtime: `node ${process.versions.node}; typescript ${ts.version}`,
             },
             capabilities: {

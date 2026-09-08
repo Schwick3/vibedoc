@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: 1
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: formula
+        run: |
+          if test -f Formula/vibedoc.rb; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: Homebrew/actions/setup-homebrew@a657b8b0cd35d0f65cce41fce9b24cf054b49869
+        if: steps.formula.outputs.available == 'true'
+        with:
+          core: true
+          cask: false
+      - name: Add the checked-out tap
+        if: steps.formula.outputs.available == 'true'
+        run: brew tap schwick3/tap "$GITHUB_WORKSPACE"
+      - name: Audit and install
+        if: steps.formula.outputs.available == 'true'
+        run: |
+          brew readall --os=all --arch=all schwick3/tap
+          brew audit --strict schwick3/tap/vibedoc
+          brew install schwick3/tap/vibedoc
+          brew test schwick3/tap/vibedoc
+      - name: Uninstall
+        if: always() && steps.formula.outputs.available == 'true'
+        run: |
+          brew uninstall --force schwick3/tap/vibedoc || true

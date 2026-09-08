@@ -5,18 +5,40 @@ small controlled-language profile with compiler facts from external source
 adapters. The first adapter analyzes TypeScript and JavaScript with a pinned
 TypeScript compiler.
 
-This repository contains a source-installable research prototype. Vibedoc does
-not generate documentation, call an LLM, use the network at runtime, or claim
-formal conformance with ASD-STE100 or ISO 24495.
+Vibedoc does not generate documentation, call an LLM, use the network at
+runtime, or claim formal conformance with ASD-STE100 or ISO 24495.
 
-## Requirements
+## Install
+
+Install the CLI and TypeScript adapter with Homebrew:
+
+```sh
+brew install Schwick3/tap/vibedoc
+```
+
+Homebrew installs Node.js, the pinned TypeScript compiler, and both Vibedoc
+executables. No Cargo or npm installation and no manual `PATH` change is
+required.
+
+Confirm that the complete installation is available:
+
+```sh
+vibedoc --version
+vibedoc doctor
+```
+
+The TypeScript adapter remains a separate release artifact, but the Homebrew
+formula installs it as Vibedoc's default adapter. Future adapters can use the
+same external-adapter protocol without being compiled into the Rust CLI.
+
+## Install from source
+
+The source installation is intended for Vibedoc contributors. It requires:
 
 - macOS or Linux
 - Rust with Cargo
 - Node.js 22 or later
 - npm
-
-## Install from source
 
 Run the development installer from the repository root:
 
@@ -170,6 +192,12 @@ that project's installed TypeScript implementation.
 The task-service [evaluation project](tests/projects/task-service/EVALUATION.md)
 exercises the CLI against a small multi-file application with both clean and
 seeded-failure documentation.
+
+## Releases
+
+Public releases contain native CLI archives for Intel and ARM macOS and Linux,
+plus a platform-independent TypeScript adapter archive. See
+[RELEASING.md](RELEASING.md) for the release and Homebrew publication process.
 
 ## Scope
 

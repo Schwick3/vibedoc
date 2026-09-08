@@ -1,14 +1,18 @@
 # Roadmap
 
-Vibedoc v1 is a source-installable research prototype. The following items are
-explicit candidates for later milestones:
+Vibedoc v0.1.0 is distributed as native macOS and Linux release archives and
+through a project-owned Homebrew tap. The TypeScript adapter is packaged
+separately but installed with the main Homebrew formula.
+
+The following items are explicit candidates for later milestones:
 
 - CLI-managed `adapter install`, `adapter update`, and `adapter remove`
   commands.
-- Standalone macOS and Linux release binaries as the likely next distribution
-  stage.
 - A combined npm distribution only if demand justifies an intermediate,
   JavaScript-focused distribution stage.
+- Additional package managers and a standalone shell installer that consume
+  the existing release artifacts.
+- Artifact signing and provenance attestations.
 - SARIF output for code-scanning integrations.
 - Automatic fixes, caching, editor integration, and Windows support.
 - Strict standards profiles and language adapters beyond TypeScript and
