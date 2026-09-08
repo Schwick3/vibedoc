@@ -120,6 +120,7 @@ jobs:
           temporary=$(mktemp -d)
           trap 'rm -rf "$temporary"' EXIT
           tar -xzf "dist/vibedoc-adapter-typescript-v${{ needs.prepare.outputs.version }}.tar.gz" -C "$temporary"
+          test -x "$temporary/dist/index.js"
           output=$(printf '%s\n%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":1,"coreVersion":"${{ needs.prepare.outputs.version }}","workspaceRoot":"."}}' '{"jsonrpc":"2.0","id":2,"method":"shutdown","params":{}}' | "$temporary/dist/index.js" --stdio)
           printf '%s\n' "$output" | grep -q '"version":"${{ needs.prepare.outputs.version }}"'
       - uses: actions/upload-artifact@v7

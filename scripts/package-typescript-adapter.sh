@@ -33,6 +33,7 @@ cp -R "$ADAPTER_ROOT/dist" "$STAGING_DIRECTORY/dist"
 cp -R "$TYPESCRIPT_ROOT" "$STAGING_DIRECTORY/node_modules/typescript"
 cp "$ADAPTER_ROOT/package.json" "$STAGING_DIRECTORY/package.json"
 cp "$REPOSITORY_ROOT/LICENSE" "$STAGING_DIRECTORY/LICENSE"
+chmod 755 "$STAGING_DIRECTORY/dist/index.js"
 
 ARCHIVE="$OUTPUT_DIRECTORY/vibedoc-adapter-typescript-v$VERSION.tar.gz"
 COPYFILE_DISABLE=1 tar -czf "$ARCHIVE" -C "$STAGING_DIRECTORY" .
