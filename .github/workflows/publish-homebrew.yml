@@ -78,12 +78,9 @@ jobs:
           name: homebrew-formulae
           path: generated-homebrew/Formula
       - name: Install generated formulae
-        env:
-          GIT_AUTHOR_NAME: vibedoc-homebrew-test
-          GIT_AUTHOR_EMAIL: vibedoc-homebrew-test@users.noreply.github.com
-          GIT_COMMITTER_NAME: vibedoc-homebrew-test
-          GIT_COMMITTER_EMAIL: vibedoc-homebrew-test@users.noreply.github.com
         run: |
+          git config --global user.name "vibedoc-homebrew-test"
+          git config --global user.email "vibedoc-homebrew-test@users.noreply.github.com"
           brew tap-new schwick3/tap
           tap_directory=$(brew --repository schwick3/tap)
           cp generated-homebrew/Formula/*.rb "$tap_directory/Formula/"
