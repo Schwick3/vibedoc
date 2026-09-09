@@ -7,7 +7,7 @@ import process from "node:process";
 import { pathToFileURL } from "node:url";
 
 const TARGETS = [
-  ["macos", "arm", "aarch64-apple-darwin"],
+  ["macos", null, "aarch64-apple-darwin"],
   ["linux", "arm", "aarch64-unknown-linux-musl"],
   ["linux", "intel", "x86_64-unknown-linux-musl"],
 ];
@@ -32,6 +32,12 @@ function requireChecksum(checksums, filename) {
 }
 
 function sourceBlock(cpu, filename, releaseBaseUrl, checksum) {
+  if (cpu === null) {
+    return [
+      "    url \"" + releaseBaseUrl + "/" + filename + "\"",
+      "    sha256 \"" + checksum + "\"",
+    ];
+  }
   return [
     "    on_" + cpu + " do",
     "      url \"" + releaseBaseUrl + "/" + filename + "\"",

@@ -69,6 +69,10 @@ test("checksums are deterministic and formulae require every artifact", () => {
     );
     assert.match(formulae["vibedoc.rb"], /depends_on "node"/);
     assert.match(formulae["vibedoc.rb"], /depends_on arch: :arm64/);
+    assert.match(
+      formulae["vibedoc.rb"],
+      /on_macos do\n    depends_on arch: :arm64\n    url .*aarch64-apple-darwin/,
+    );
     assert.doesNotMatch(formulae["vibedoc.rb"], /x86_64-apple-darwin/);
     assert.equal(Object.keys(formulae).length, 1);
 
