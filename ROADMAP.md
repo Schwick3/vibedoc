@@ -12,6 +12,8 @@ The following items are explicit candidates for later milestones:
   JavaScript-focused distribution stage.
 - Additional package managers and a standalone shell installer that consume
   the existing release artifacts.
+- Intel macOS release artifacts and Homebrew installation support if user
+  demand justifies the additional release target.
 - Artifact signing and provenance attestations.
 - SARIF output for code-scanning integrations.
 - Automatic fixes, caching, editor integration, and Windows support.

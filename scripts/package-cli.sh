@@ -22,7 +22,7 @@ if [ ! -f "$BINARY" ]; then
 fi
 
 case "$TARGET" in
-  aarch64-apple-darwin|x86_64-apple-darwin|aarch64-unknown-linux-musl|x86_64-unknown-linux-musl) ;;
+  aarch64-apple-darwin|aarch64-unknown-linux-musl|x86_64-unknown-linux-musl) ;;
   *)
     echo "Unsupported release target: $TARGET" >&2
     exit 2

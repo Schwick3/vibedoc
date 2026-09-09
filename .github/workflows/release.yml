@@ -9,7 +9,7 @@ on:
       tag:
         description: Stable release tag to validate during the dry run
         required: true
-        default: v0.1.1
+        default: v0.1.2
 
 permissions:
   contents: read
@@ -69,8 +69,6 @@ jobs:
         include:
           - runner: macos-15
             target: aarch64-apple-darwin
-          - runner: macos-15-intel
-            target: x86_64-apple-darwin
           - runner: ubuntu-22.04-arm
             target: aarch64-unknown-linux-musl
           - runner: ubuntu-22.04
@@ -191,7 +189,6 @@ jobs:
       matrix:
         runner:
           - macos-15
-          - macos-15-intel
           - ubuntu-22.04-arm
           - ubuntu-22.04
     runs-on: ${{ matrix.runner }}

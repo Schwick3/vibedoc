@@ -6,7 +6,7 @@ on:
       tag:
         description: Existing stable release tag to publish to Homebrew
         required: true
-        default: v0.1.1
+        default: v0.1.2
 
 permissions:
   contents: read
@@ -61,7 +61,6 @@ jobs:
       matrix:
         runner:
           - macos-15
-          - macos-15-intel
           - ubuntu-22.04-arm
           - ubuntu-22.04
     runs-on: ${{ matrix.runner }}

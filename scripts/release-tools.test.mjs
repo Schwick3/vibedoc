@@ -49,7 +49,6 @@ test("checksums are deterministic and formulae require every artifact", () => {
 
     const names = [
       "vibedoc-v0.1.0-aarch64-apple-darwin.tar.gz",
-      "vibedoc-v0.1.0-x86_64-apple-darwin.tar.gz",
       "vibedoc-v0.1.0-aarch64-unknown-linux-musl.tar.gz",
       "vibedoc-v0.1.0-x86_64-unknown-linux-musl.tar.gz",
       "vibedoc-adapter-typescript-v0.1.0.tar.gz",
@@ -69,6 +68,8 @@ test("checksums are deterministic and formulae require every artifact", () => {
       /resource "typescript-adapter"/,
     );
     assert.match(formulae["vibedoc.rb"], /depends_on "node"/);
+    assert.match(formulae["vibedoc.rb"], /depends_on arch: :arm64/);
+    assert.doesNotMatch(formulae["vibedoc.rb"], /x86_64-apple-darwin/);
     assert.equal(Object.keys(formulae).length, 1);
 
     checksums.delete(names[0]);

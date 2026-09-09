@@ -20,6 +20,9 @@ Homebrew installs Node.js, the pinned TypeScript compiler, and both Vibedoc
 executables. No Cargo or npm installation and no manual `PATH` change is
 required.
 
+Prebuilt releases support Apple Silicon macOS and ARM64 or x86-64 Linux.
+Intel macOS is not supported in this research-stage release.
+
 Confirm that the complete installation is available:
 
 ```sh
@@ -195,8 +198,8 @@ seeded-failure documentation.
 
 ## Releases
 
-Public releases contain native CLI archives for Intel and ARM macOS and Linux,
-plus a platform-independent TypeScript adapter archive. See
+Public releases contain native CLI archives for Apple Silicon macOS and ARM64
+or x86-64 Linux, plus a platform-independent TypeScript adapter archive. See
 [RELEASING.md](RELEASING.md) for the release and Homebrew publication process.
 
 ## Scope

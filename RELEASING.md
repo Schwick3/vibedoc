@@ -28,7 +28,7 @@ implicitly trust third-party formula dependencies.
 3. Confirm the intended tag matches every package:
 
    ```sh
-   node scripts/release-version.mjs v0.1.1
+   node scripts/release-version.mjs v0.1.2
    ```
 
 4. Run the normal checks:
@@ -52,17 +52,18 @@ implicitly trust third-party formula dependencies.
 Create and push an annotated stable-version tag:
 
 ```sh
-git tag -a v0.1.1 -m "Vibedoc v0.1.1"
-git push origin v0.1.1
+git tag -a v0.1.2 -m "Vibedoc v0.1.2"
+git push origin v0.1.2
 ```
 
 The tag workflow:
 
 1. validates the package versions;
 2. runs the complete test suite on macOS and Linux;
-3. builds four native CLI archives and one TypeScript adapter archive;
+3. builds three native CLI archives and one TypeScript adapter archive;
 4. creates `SHA256SUMS` and the public GitHub release;
-5. generates and tests the Homebrew formula on Intel and ARM macOS and Linux;
+5. generates and tests the Homebrew formula on Apple Silicon macOS and ARM64
+   and x86-64 Linux;
    and
 6. commits the formula to `Schwick3/homebrew-tap`.
 
@@ -87,7 +88,7 @@ If the release assets are valid but the release workflow itself must change,
 fix the workflow on `main` and run the `Publish Homebrew` workflow with the
 existing immutable tag. This recovery workflow checks out the tag, downloads
 the published assets, verifies `SHA256SUMS`, tests the generated formula on all
-four target platforms, and updates the tap only after every test passes. It
+three target platforms, and updates the tap only after every test passes. It
 does not rebuild or replace release assets.
 
 Publish a new patch version when product source or a release artifact must

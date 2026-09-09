@@ -8,7 +8,6 @@ import { pathToFileURL } from "node:url";
 
 const TARGETS = [
   ["macos", "arm", "aarch64-apple-darwin"],
-  ["macos", "intel", "x86_64-apple-darwin"],
   ["linux", "arm", "aarch64-unknown-linux-musl"],
   ["linux", "intel", "x86_64-unknown-linux-musl"],
 ];
@@ -70,6 +69,7 @@ export function renderFormulae(version, releaseBaseUrl, checksums) {
     "  depends_on \"node\"",
     "",
     "  on_macos do",
+    "    depends_on arch: :arm64",
     ...sourcesByOs.get("macos"),
     "  end",
     "  on_linux do",
