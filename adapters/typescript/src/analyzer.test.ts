@@ -198,3 +198,46 @@ test("marks unresolved and nested dynamic types incomplete while preserving prec
   assert.equal(graph.symbols.find((symbol) => symbol.name === "brokenThrow")?.throws[0]?.confidence, "incomplete");
   assert.equal(graph.symbols.find((symbol) => symbol.name === "validThrow")?.throws[0]?.confidence, "exact");
 });
+
+test("detects unresolved members in named, recursive, and callable shapes", () => {
+  const result = analyzeSource(`
+    interface Broken { payload: MissingPayload }
+    interface Recursive { next?: Recursive; value: string }
+    interface Callback { run: () => MissingPayload }
+    export function broken(value: Broken): Broken { return value; }
+    export function callback(value: Callback): Callback { return value; }
+    export function recursive(value: Recursive): Recursive { return value; }
+  `);
+  for (const name of ["broken", "callback"]) {
+    assert.equal(result.graph.symbols.find((s) => s.name === name)?.signatures[0]?.returnType.confidence, "incomplete");
+  }
+  assert.equal(result.graph.symbols.find((s) => s.name === "recursive")?.signatures[0]?.returnType.confidence, "exact");
+  assert.ok(result.diagnostics.some((d) => d.code === "TS2304" && d.severity === "warning"));
+});
+
+test("resolves cross-project calls and rejects conflicting shared-file facts deterministically", () => {
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "vibedoc-projects-"));
+  try {
+    fs.writeFileSync(path.join(temporary, "shared.ts"), 'export function target(value: string | null): string | null { return value; }');
+    fs.writeFileSync(path.join(temporary, "consumer.ts"), 'import { target } from "./shared"; export function call() { return target(null); }');
+    const project = (name: string, strictNullChecks: boolean, include: string[]) => {
+      const file = path.join(temporary, name);
+      fs.writeFileSync(file, JSON.stringify({ compilerOptions: { strictNullChecks, target: "ES2022", module: "ESNext", moduleResolution: "Bundler" }, include }));
+      return file;
+    };
+    const first = project("a.json", true, ["shared.ts"]);
+    const second = project("b.json", true, ["consumer.ts"]);
+    const params = { workspaceRoot: temporary, projects: [first, second], sourceGlobs: [] };
+    const clean = analyzeWorkspace(params);
+    assert.ok(clean.graph.relationships.some((r) => r.display === "target" && r.to === "typescript:shared.ts#target"));
+    assert.equal(clean.graph.symbols.find((s) => s.name === "target")?.signatures.length, 1);
+    assert.deepEqual(clean.diagnostics, []);
+    project("b.json", false, ["consumer.ts"]);
+    const conflict = analyzeWorkspace(params);
+    assert.equal(conflict.graph.symbols.find((s) => s.name === "target")?.confidence, "incomplete");
+    assert.ok(conflict.diagnostics.some((d) => d.code === "TSADAPTER004"));
+    assert.deepEqual(analyzeWorkspace({ ...params, projects: [second, first] }), conflict);
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
+});

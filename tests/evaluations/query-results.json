@@ -1,0 +1,137 @@
+{
+  "repository": "https://github.com/TanStack/query",
+  "revision": "7452ef68a2901fc9a5673a8e5f53185a506b182f",
+  "runs": {
+    "upstreamQueryClientGuide": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": []
+    },
+    "upstreamPersistenceGuide": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 2,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-L001",
+          "message": "Sentence has 39 words; the maximum is 25.",
+          "line": 166
+        },
+        {
+          "ruleId": "VDOC-L001",
+          "message": "Sentence has 31 words; the maximum is 25.",
+          "line": 183
+        }
+      ]
+    },
+    "upstreamQueryClientReference": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": []
+    },
+    "validReference": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 2,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": []
+    },
+    "invalidReference": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 2,
+        "warnings": 0,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 2,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G006",
+          "message": "Return type is documented as `string` but the source type is `void`.",
+          "line": 8
+        },
+        {
+          "ruleId": "VDOC-G006",
+          "message": "Return type is documented as `number` but the source type is `boolean`.",
+          "line": 15
+        }
+      ]
+    },
+    "dynamicObjectReference": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 1,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 2,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 1,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 11
+        }
+      ]
+    }
+  },
+  "facts": {
+    "files": 27,
+    "symbols": 1049,
+    "relationships": 708,
+    "crossPackageTargetsResolved": 2,
+    "projectOrderIndependent": true
+  }
+}

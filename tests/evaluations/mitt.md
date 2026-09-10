@@ -62,8 +62,9 @@ source mutation are controlled tests, not independently authored upstream API
 documentation. Namespace identity is covered separately by adapter regression
 tests because mitt does not use namespaces.
 
-Type completeness checks inspect compiler flags and nested type arguments;
-they are not a full structural proof of every property in a named object type.
+The subsequent monorepo changes add bounded traversal of named properties and
+callable shapes, plus selected TypeScript resolution diagnostics. This mitt
+evaluation was rerun with those changes and retained the recorded results.
 The adapter still does not report every TypeScript semantic diagnostic. A normal
 TypeScript build remains a separate check.
 
@@ -83,5 +84,5 @@ npm run test:real-project -- /tmp/vibedoc-mitt /tmp/mitt-results.json
 
 Use a clean checkout at the pinned revision. The script refuses modified tracked
 files and creates uniquely named temporary evaluation files within the checkout.
-The optional final argument writes the results JSON. Normal tests remain offline;
-this real-project evaluation runs explicitly after cloning upstream.
+The optional final argument writes the results JSON. Normal unit tests remain
+offline; the dedicated CI job also runs this evaluation after cloning upstream.

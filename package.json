@@ -11,7 +11,8 @@
     "test:release": "node --test scripts/*.test.mjs",
     "test:e2e": "./scripts/test-e2e.sh",
     "test:evaluation": "./scripts/test-evaluation.sh",
-    "test:real-project": "node scripts/test-real-project.mjs"
+    "test:real-project": "node scripts/test-real-project.mjs",
+    "test:monorepo": "node scripts/test-monorepo.mjs"
   },
   "devDependencies": {
     "ajv": "8.20.0"

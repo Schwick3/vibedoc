@@ -572,7 +572,7 @@ fn validate_reference_claims(
     config: &Config,
     result: &mut CheckResult,
 ) {
-    if symbol.signatures.len() != 1 {
+    if symbol.signatures.len() != 1 || symbol.confidence == Confidence::Incomplete {
         let count =
             claims.parameters.len() + claims.return_type.iter().count() + claims.errors.len();
         result.verification.unverified_structural_claims += count;
@@ -587,11 +587,18 @@ fn validate_reference_claims(
                 &mut result.diagnostics,
                 config,
                 "VDOC-G008",
-                format!(
-                    "`{}` has {} signatures; structural claims were not compared.",
-                    symbol.qualified_name,
-                    symbol.signatures.len()
-                ),
+                if symbol.confidence == Confidence::Incomplete {
+                    format!(
+                        "`{}` has incomplete symbol evidence; structural claims were not compared.",
+                        symbol.qualified_name
+                    )
+                } else {
+                    format!(
+                        "`{}` has {} signatures; structural claims were not compared.",
+                        symbol.qualified_name,
+                        symbol.signatures.len()
+                    )
+                },
                 document,
                 location,
                 vec![symbol.declaration.clone()],
@@ -858,6 +865,7 @@ fn check_experimental(
         };
         let supported = graph.relationships.iter().any(|relationship| {
             relationship.from == symbol.id
+                && relationship.confidence != Confidence::Incomplete
                 && relationship.kind == expected_kind
                 && (relationship.display == object
                     || relationship
@@ -1395,6 +1403,46 @@ This simple function handles all of the authentication stuff for every user in t
             assert!(diagnostic.experimental);
         }
         assert!(result.verification.free_form_prose_evaluated);
+    }
+
+    #[test]
+    fn incomplete_symbol_does_not_contradict_parameter_or_return_claims() {
+        let document = parse_document(
+            "/tmp/shared.md",
+            "shared.md",
+            DocumentProfile::Reference,
+            "# `shared`\n\n## Parameters\n\n- `other`: The input.\n\n## Returns\n\n`number`\n"
+                .into(),
+        );
+        let mut shared = symbol(
+            "typescript:shared.ts#shared",
+            "shared.ts",
+            "shared",
+            "shared",
+            vec![Signature {
+                parameters: vec![],
+                return_type: TypeFact {
+                    display: "string".into(),
+                    normalized: "string".into(),
+                    confidence: Confidence::Exact,
+                },
+                declaration: location("shared.ts"),
+            }],
+        );
+        shared.confidence = Confidence::Incomplete;
+        let result = check_documents(
+            &[document],
+            &FactGraph {
+                symbols: vec![shared],
+                ..FactGraph::default()
+            },
+            &Config::default(),
+            CheckOptions::default(),
+        );
+        assert_eq!(result.verification.verified_structural_claims, 0);
+        assert_eq!(result.verification.contradicted_structural_claims, 0);
+        assert_eq!(result.verification.unverified_structural_claims, 2);
+        assert!(result.diagnostics.iter().any(|d| d.rule_id == "VDOC-G008"));
     }
 
     #[test]

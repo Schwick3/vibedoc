@@ -17,6 +17,7 @@ import type {
 } from "./protocol.js";
 
 const ADAPTER = "typescript";
+const COMPILER_LIB_DIRECTORY = path.dirname(ts.getDefaultLibFilePath({}));
 const SUPPORTED_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx"];
 
 interface SymbolRecord {
@@ -31,40 +32,69 @@ export function analyzeWorkspace(params: AnalyzeParams): AnalyzeResult {
   const diagnostics: AdapterDiagnostic[] = [];
   const programs = createPrograms(params, root, diagnostics);
   const files = new Map<string, { path: string; language: string }>();
-  let records: SymbolRecord[] = [];
+  const symbols = new Map<string, SourceSymbol>();
   const relationships: Relationship[] = [];
-  const visitedFiles = new Set<string>();
+  const conflicts = new Set<string>();
 
   for (const program of programs) {
     const checker = program.getTypeChecker();
     const exportedSymbols = collectExportedSymbols(program, checker);
+    const records: SymbolRecord[] = [];
+    // Symbols belong to their compiler Program. Resolve each program's edges
+    // before combining facts for shared files across project configurations.
     for (const sourceFile of program.getSourceFiles()) {
       const absolute = path.resolve(sourceFile.fileName);
       if (!isWorkspaceSource(absolute, root, sourceFile)) continue;
       const relative = relativePath(root, absolute);
-      if (visitedFiles.has(relative)) continue;
-      visitedFiles.add(relative);
       files.set(relative, { path: relative, language: languageFor(sourceFile.fileName) });
       collectSymbols(sourceFile, checker, root, exportedSymbols, records);
     }
+    const merged = mergeSymbolRecords(records);
+    const idBySymbol = new Map<ts.Symbol, string>();
+    for (const record of merged) {
+      if (record.symbol) idBySymbol.set(record.symbol, record.fact.id);
+    }
+    for (const record of merged) {
+      relationships.push(...collectRelationships(record, checker, root, idBySymbol));
+      const existing = symbols.get(record.fact.id);
+      if (!existing) {
+        symbols.set(record.fact.id, record.fact);
+      } else if (JSON.stringify(existing) !== JSON.stringify(record.fact)) {
+        conflicts.add(record.fact.id);
+      }
+    }
+    // Surface resolution failures without turning Vibedoc into a full tsc run.
+    const resolutionCodes = new Set([2304, 2305, 2307, 2503, 2694, 2724, 7016]);
+    for (const diagnostic of program.getSemanticDiagnostics()) {
+      if (resolutionCodes.has(diagnostic.code) && diagnostic.file &&
+          isWorkspaceSource(path.resolve(diagnostic.file.fileName), root, diagnostic.file)) {
+        diagnostics.push({ ...tsDiagnostic(diagnostic, root), severity: "warning" });
+      }
+    }
   }
-
-  records = mergeSymbolRecords(records);
-
-  const idBySymbol = new Map<ts.Symbol, string>();
-  for (const record of records) {
-    if (record.symbol) idBySymbol.set(record.symbol, record.fact.id);
+  for (const id of conflicts) {
+    const fact = symbols.get(id)!;
+    fact.confidence = "incomplete";
+    for (const signature of fact.signatures) {
+      signature.returnType.confidence = "incomplete";
+      for (const parameter of signature.parameters) parameter.typeFact.confidence = "incomplete";
+    }
+    for (const thrown of fact.throws) thrown.confidence = "incomplete";
+    diagnostics.push({ code: "TSADAPTER004", severity: "warning",
+      message: `Project configurations disagree about ${id}; its type and throw evidence is incomplete.`,
+      location: fact.declaration });
   }
-  for (const record of records) {
-    relationships.push(...collectRelationships(record, record.checker, root, idBySymbol));
+  for (const relationship of relationships) {
+    if (conflicts.has(relationship.from)) relationship.confidence = "incomplete";
   }
 
   const graph: FactGraph = {
     files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path)),
-    symbols: records.map((record) => record.fact).sort((a, b) => a.id.localeCompare(b.id)),
+    symbols: [...symbols.values()].sort((a, b) => a.id.localeCompare(b.id)),
     relationships: uniqueRelationships(relationships),
   };
-  return { graph, diagnostics };
+  return { graph, diagnostics: [...new Map(diagnostics.map((item) => [JSON.stringify(item), item])).values()]
+    .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))) };
 }
 
 function createPrograms(
@@ -73,7 +103,7 @@ function createPrograms(
   diagnostics: AdapterDiagnostic[],
 ): ts.Program[] {
   const programs: ts.Program[] = [];
-  for (const requested of params.projects) {
+  for (const requested of [...new Set(params.projects)].sort()) {
     let configPath = path.resolve(root, requested);
     if (ts.sys.directoryExists(configPath)) {
       configPath = ts.findConfigFile(configPath, ts.sys.fileExists) ?? configPath;
@@ -398,6 +428,8 @@ function typeFact(type: ts.Type, checker: ts.TypeChecker, node: ts.Node, explici
 function isIncompleteType(type: ts.Type, checker: ts.TypeChecker, seen = new Set<ts.Type>()): boolean {
   if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) return true;
   if (seen.has(type)) return false;
+  // Bound expansion of recursive generic structures; exhausted evidence is unknown.
+  if (seen.size >= 256) return true;
   seen.add(type);
   if (type.isUnionOrIntersection() && type.types.some((part) => isIncompleteType(part, checker, seen))) {
     return true;
@@ -409,7 +441,29 @@ function isIncompleteType(type: ts.Type, checker: ts.TypeChecker, seen = new Set
       argumentsToCheck.push(...checker.getTypeArguments(type as ts.TypeReference));
     }
   }
-  return argumentsToCheck.some((argument) => isIncompleteType(argument, checker, seen));
+  if (argumentsToCheck.some((argument) => isIncompleteType(argument, checker, seen))) return true;
+  if (type.flags & ts.TypeFlags.Object) {
+    for (const property of checker.getPropertiesOfType(type)) {
+      const declaration = property.valueDeclaration ?? property.declarations?.[0];
+      // Standard-library internals do not determine a user's declared shape.
+      if (!declaration || path.dirname(declaration.getSourceFile().fileName) === COMPILER_LIB_DIRECTORY) continue;
+      if (isIncompleteType(checker.getTypeOfSymbolAtLocation(property, declaration), checker, seen)) return true;
+    }
+    for (const kind of [ts.SignatureKind.Call, ts.SignatureKind.Construct]) {
+      for (const signature of checker.getSignaturesOfType(type, kind)) {
+        const declaration = signature.getDeclaration();
+        if (!declaration || path.dirname(declaration.getSourceFile().fileName) === COMPILER_LIB_DIRECTORY) continue;
+        if (isIncompleteType(checker.getReturnTypeOfSignature(signature), checker, seen)) return true;
+        for (const parameter of signature.parameters) {
+          if (isIncompleteType(checker.getTypeOfSymbolAtLocation(parameter, declaration), checker, seen)) return true;
+        }
+      }
+    }
+    for (const index of checker.getIndexInfosOfType(type)) {
+      if (isIncompleteType(index.type, checker, seen)) return true;
+    }
+  }
+  return false;
 }
 
 function confidenceForNode(node: ts.Node): Confidence {

@@ -57,6 +57,18 @@ its name alone does not make it exact. Arrays, tuples, and generic containers
 with incomplete type arguments also remain unverified. Direct throws with
 incomplete types cannot verify an Errors claim.
 
+Named object properties, call and construct signatures, and index signatures
+are traversed with cycle detection and a 256-type budget. Exceeding the budget
+also yields incomplete evidence. Standard-library member internals are skipped;
+their container type arguments are still checked. Type parameters remain symbolic.
+
+Each project's compiler program resolves its own symbol relationships before
+facts are combined. Identical shared facts are deduplicated. If projects disagree
+about a symbol, `TSADAPTER004` marks its evidence incomplete and structural claims
+remain unverified. Project ordering does not select a more confident result.
+Relevant missing-name, module, and member compiler diagnostics are surfaced as
+adapter warnings; this is not a complete TypeScript diagnostic report.
+
 Namespace and nested namespace names participate in symbol identifiers, so
 `A.parse` and `B.parse` remain distinct while overloads of `A.parse` merge.
 This analysis is not a substitute for TypeScript's full project type check.

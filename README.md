@@ -200,6 +200,10 @@ The [mitt evaluation](tests/evaluations/mitt.md) checks a pinned GitHub project,
 its original README, and controlled reference claims against its real source.
 It includes an opt-in reproduction script and recorded results.
 
+The [TanStack Query evaluation](tests/evaluations/query.md) covers two monorepo
+packages, cross-package calls, and native documentation coverage. CI runs both
+evaluations against pinned upstream revisions.
+
 ## Releases
 
 Public releases contain native CLI archives for Apple Silicon macOS and ARM64

@@ -29,3 +29,31 @@ jobs:
       - run: npm test
       - run: ./scripts/test-e2e.sh
       - run: ./scripts/test-evaluation.sh
+
+  real-projects:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: cargo build --workspace --locked
+      - uses: actions/checkout@v6
+        with:
+          repository: developit/mitt
+          ref: 6b41670516ed8e8b738612f60491995470aa63b3
+          path: target/real-projects/mitt
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          repository: TanStack/query
+          ref: 7452ef68a2901fc9a5673a8e5f53185a506b182f
+          path: target/real-projects/query
+          persist-credentials: false
+      - run: npm run test:real-project -- target/real-projects/mitt
+      - run: npm run test:monorepo -- target/real-projects/query

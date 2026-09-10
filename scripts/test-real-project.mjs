@@ -5,7 +5,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { analyzeWorkspace } from '../adapters/typescript/dist/analyzer.js';
 
-// Deliberately opt-in: clone the pinned upstream revision separately, then run this script.
+// Clone the pinned upstream revision separately; also exercised by the real-projects CI job.
 const revision = '6b41670516ed8e8b738612f60491995470aa63b3';
 const repository = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const checkout = path.resolve(process.argv[2] ?? '');
