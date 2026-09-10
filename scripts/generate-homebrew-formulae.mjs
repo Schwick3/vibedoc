@@ -7,7 +7,6 @@ import process from "node:process";
 import { pathToFileURL } from "node:url";
 
 const TARGETS = [
-  ["macos", null, "aarch64-apple-darwin"],
   ["linux", "arm", "aarch64-unknown-linux-musl"],
   ["linux", "intel", "x86_64-unknown-linux-musl"],
 ];
@@ -32,12 +31,6 @@ function requireChecksum(checksums, filename) {
 }
 
 function sourceBlock(cpu, filename, releaseBaseUrl, checksum) {
-  if (cpu === null) {
-    return [
-      "    url \"" + releaseBaseUrl + "/" + filename + "\"",
-      "    sha256 \"" + checksum + "\"",
-    ];
-  }
   return [
     "    on_" + cpu + " do",
     "      url \"" + releaseBaseUrl + "/" + filename + "\"",
@@ -50,10 +43,9 @@ export function renderFormulae(version, releaseBaseUrl, checksums) {
   assert(/^\d+\.\d+\.\d+$/.test(version), "Invalid release version: " + version);
   const adapterFilename =
     "vibedoc-adapter-typescript-v" + version + ".tar.gz";
-  const sourcesByOs = new Map([
-    ["macos", []],
-    ["linux", []],
-  ]);
+  const macosFilename =
+    "vibedoc-v" + version + "-aarch64-apple-darwin.tar.gz";
+  const sourcesByOs = new Map([["linux", []]]);
   for (const [os, cpu, target] of TARGETS) {
     const filename = "vibedoc-v" + version + "-" + target + ".tar.gz";
     sourcesByOs.get(os).push(
@@ -71,12 +63,13 @@ export function renderFormulae(version, releaseBaseUrl, checksums) {
     "  desc \"Evidence-aware software documentation checker\"",
     "  homepage \"https://github.com/Schwick3/vibedoc\"",
     "  license \"MIT\"",
+    "  url \"" + releaseBaseUrl + "/" + macosFilename + "\"",
+    "  sha256 \"" + requireChecksum(checksums, macosFilename) + "\"",
     "",
     "  depends_on \"node\"",
     "",
     "  on_macos do",
     "    depends_on arch: :arm64",
-    ...sourcesByOs.get("macos"),
     "  end",
     "  on_linux do",
     ...sourcesByOs.get("linux"),
