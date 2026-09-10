@@ -50,6 +50,17 @@ The rule engine does not convert insufficient compiler information into a
 contradiction. Overloads, dynamic values, `any`, `unknown`, and destructured
 parameters remain unverified when a safe comparison is unavailable.
 
+The TypeScript adapter checks compiler type flags, unions, intersections, and
+type arguments for incomplete evidence. An unresolved type can retain a name
+such as `MissingType` in compiler output while internally being an error type;
+its name alone does not make it exact. Arrays, tuples, and generic containers
+with incomplete type arguments also remain unverified. Direct throws with
+incomplete types cannot verify an Errors claim.
+
+Namespace and nested namespace names participate in symbol identifiers, so
+`A.parse` and `B.parse` remain distinct while overloads of `A.parse` merge.
+This analysis is not a substitute for TypeScript's full project type check.
+
 ## Verification boundary
 
 Deterministic reference sections are verified against compiler facts. General

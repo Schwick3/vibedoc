@@ -196,6 +196,10 @@ The task-service [evaluation project](tests/projects/task-service/EVALUATION.md)
 exercises the CLI against a small multi-file application with both clean and
 seeded-failure documentation.
 
+The [mitt evaluation](tests/evaluations/mitt.md) checks a pinned GitHub project,
+its original README, and controlled reference claims against its real source.
+It includes an opt-in reproduction script and recorded results.
+
 ## Releases
 
 Public releases contain native CLI archives for Apple Silicon macOS and ARM64

@@ -1,0 +1,121 @@
+{
+  "repository": "https://github.com/developit/mitt",
+  "revision": "6b41670516ed8e8b738612f60491995470aa63b3",
+  "runs": {
+    "upstreamReadme": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 1,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-D001",
+          "message": "Heading level 4 follows heading level 2."
+        }
+      ]
+    },
+    "validReference": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 2,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": []
+    },
+    "invalidReference": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 2,
+        "warnings": 1,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 2,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G004",
+          "message": "Parameter `all` is not documented."
+        },
+        {
+          "ruleId": "VDOC-G003",
+          "message": "`ghost` is not a parameter of `mitt`."
+        },
+        {
+          "ruleId": "VDOC-G006",
+          "message": "Return type is documented as `number` but the source type is `Emitter<Events>`."
+        }
+      ]
+    },
+    "overloadedReference": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 1,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 1,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "`Emitter.on` has 2 signatures; structural claims were not compared."
+        }
+      ]
+    },
+    "unresolvedReturn": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 1,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 1,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 1,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare."
+        }
+      ]
+    }
+  },
+  "facts": {
+    "files": 1,
+    "symbols": 12,
+    "relationships": 1,
+    "factoryReturn": "Emitter<Events>",
+    "overloadsPerMethod": 2
+  }
+}

@@ -188,6 +188,10 @@ function collectSymbols(
       if (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) {
         nextParents = [...parents, descriptor.name];
         childExport = exported;
+      } else if (ts.isModuleDeclaration(node)) {
+        nextParents = [...parents, descriptor.name];
+        // Namespace members must be explicitly exported; class members inherit visibility.
+        childExport = false;
       }
       if (
         ts.isFunctionDeclaration(node) ||
@@ -206,6 +210,7 @@ function collectSymbols(
 }
 
 function describeNode(node: ts.Node, sourceFile: ts.SourceFile): { name: string; kind: SymbolKind } | undefined {
+  if (ts.isModuleDeclaration(node)) return { name: node.name.text, kind: "module" };
   if (ts.isFunctionDeclaration(node)) {
     if (node.name) return { name: node.name.text, kind: "function" };
     if (hasDefaultModifier(node)) return { name: "default", kind: "defaultExport" };
@@ -288,13 +293,14 @@ function throwsFor(node: ts.Node, checker: ts.TypeChecker, root: string): ThrowF
       const expression = child.expression;
       let typeName: string;
       let confidence: Confidence = "inferred";
+      const thrownType = checker.getTypeAtLocation(expression);
       if (ts.isNewExpression(expression)) {
         typeName = expression.expression.getText();
         confidence = "exact";
       } else {
-        typeName = checker.typeToString(checker.getTypeAtLocation(expression), expression);
-        if (typeName === "any" || typeName === "unknown") confidence = "incomplete";
+        typeName = checker.typeToString(thrownType, expression);
       }
+      if (isIncompleteType(thrownType, checker)) confidence = "incomplete";
       output.push({
         typeName,
         location: location(node.getSourceFile(), child, root),
@@ -379,12 +385,31 @@ function heritageRelationships(
 
 function typeFact(type: ts.Type, checker: ts.TypeChecker, node: ts.Node, explicit: boolean): TypeFact {
   const display = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);
-  const incomplete = display === "any" || display === "unknown";
+  const incomplete = isIncompleteType(type, checker);
   return {
     display,
     normalized: normalizeType(display),
     confidence: incomplete ? "incomplete" : explicit ? "exact" : "inferred",
   };
+}
+
+// Error types can retain an unresolved alias's display name while carrying Any.
+// Inspect compiler flags and nested type arguments instead of formatted strings.
+function isIncompleteType(type: ts.Type, checker: ts.TypeChecker, seen = new Set<ts.Type>()): boolean {
+  if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) return true;
+  if (seen.has(type)) return false;
+  seen.add(type);
+  if (type.isUnionOrIntersection() && type.types.some((part) => isIncompleteType(part, checker, seen))) {
+    return true;
+  }
+  const argumentsToCheck = [...(type.aliasTypeArguments ?? [])];
+  if (type.flags & ts.TypeFlags.Object) {
+    const object = type as ts.ObjectType;
+    if (object.objectFlags & ts.ObjectFlags.Reference) {
+      argumentsToCheck.push(...checker.getTypeArguments(type as ts.TypeReference));
+    }
+  }
+  return argumentsToCheck.some((argument) => isIncompleteType(argument, checker, seen));
 }
 
 function confidenceForNode(node: ts.Node): Confidence {

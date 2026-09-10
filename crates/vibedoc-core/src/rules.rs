@@ -757,13 +757,10 @@ fn validate_reference_claims(
     }
 
     for claim in &claims.errors {
-        if let Some(observed) = symbol
-            .throws
-            .iter()
-            .find(|observed| observed.type_name == claim.value)
-        {
+        if symbol.throws.iter().any(|observed| {
+            observed.type_name == claim.value && observed.confidence != Confidence::Incomplete
+        }) {
             result.verification.verified_structural_claims += 1;
-            let _ = observed;
         } else {
             result.verification.unverified_structural_claims += 1;
             push(
@@ -809,11 +806,14 @@ fn check_experimental(
         let object = captures.get(3).unwrap().as_str();
         let supported = if predicate == "returns" {
             symbol.signatures.iter().any(|signature| {
-                normalize_type(object) == normalize_type(&signature.return_type.normalized)
-                    || normalize_type(object) == normalize_type(&signature.return_type.display)
+                signature.return_type.confidence != Confidence::Incomplete
+                    && (normalize_type(object) == normalize_type(&signature.return_type.normalized)
+                        || normalize_type(object) == normalize_type(&signature.return_type.display))
             })
         } else {
-            symbol.throws.iter().any(|error| error.type_name == object)
+            symbol.throws.iter().any(|error| {
+                error.type_name == object && error.confidence != Confidence::Incomplete
+            })
         };
         if !supported {
             push(
@@ -1395,6 +1395,74 @@ This simple function handles all of the authentication stuff for every user in t
             assert!(diagnostic.experimental);
         }
         assert!(result.verification.free_form_prose_evaluated);
+    }
+
+    #[test]
+    fn incomplete_named_types_and_throws_do_not_verify_or_contradict_claims() {
+        let document = parse_document(
+            "/tmp/broken.md",
+            "broken.md",
+            DocumentProfile::Reference,
+            "# `broken`\n\n`broken` returns `MissingType`. `broken` throws `MissingError`.\n\n## Parameters\n\n- `value` (`string`): The input.\n\n## Returns\n\n`number`\n\n## Errors\n\n- `MissingError`: The operation failed.\n".into(),
+        );
+        let declaration = location("src/broken.ts");
+        let incomplete = TypeFact {
+            display: "MissingType".into(),
+            normalized: "MissingType".into(),
+            confidence: Confidence::Incomplete,
+        };
+        let mut broken = symbol(
+            "typescript:src/broken.ts#broken",
+            "src/broken.ts",
+            "broken",
+            "broken",
+            vec![Signature {
+                parameters: vec![vibedoc_protocol::Parameter {
+                    name: "value".into(),
+                    type_fact: incomplete.clone(),
+                    optional: false,
+                    rest: false,
+                    destructured: false,
+                    location: declaration.clone(),
+                }],
+                return_type: incomplete,
+                declaration: declaration.clone(),
+            }],
+        );
+        broken.throws.push(vibedoc_protocol::ThrowFact {
+            type_name: "MissingError".into(),
+            location: declaration,
+            confidence: Confidence::Incomplete,
+        });
+        let result = check_documents(
+            &[document],
+            &FactGraph {
+                symbols: vec![broken],
+                ..FactGraph::default()
+            },
+            &Config::default(),
+            CheckOptions { experimental: true },
+        );
+        assert_eq!(
+            result
+                .diagnostics
+                .iter()
+                .filter(|d| d.rule_id == "VDOC-X001")
+                .count(),
+            2
+        );
+        assert_eq!(result.verification.verified_structural_claims, 1); // Parameter name only.
+        assert_eq!(result.verification.unverified_structural_claims, 3);
+        assert_eq!(result.verification.contradicted_structural_claims, 0);
+        assert_eq!(
+            result
+                .diagnostics
+                .iter()
+                .filter(|d| d.rule_id == "VDOC-G008")
+                .count(),
+            2
+        );
+        assert!(result.diagnostics.iter().any(|d| d.rule_id == "VDOC-G007"));
     }
 
     #[test]

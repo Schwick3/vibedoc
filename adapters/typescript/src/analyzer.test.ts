@@ -136,3 +136,65 @@ test("reports invalid project configuration", () => {
     fs.rmSync(temporary, { recursive: true, force: true });
   }
 });
+
+function analyzeSource(source: string) {
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "vibedoc-facts-"));
+  try {
+    fs.writeFileSync(path.join(temporary, "source.ts"), source);
+    return analyzeWorkspace({ workspaceRoot: temporary, projects: [], sourceGlobs: ["*.ts"] });
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
+test("keeps namespace identities, overloads, and call targets distinct", () => {
+  const { graph } = analyzeSource(`
+    export namespace A {
+      export function parse(value: string): string;
+      export function parse(value: number): number;
+      export function parse(value: string | number) { return value; }
+      function hidden() {}
+      export namespace Nested { export function parse(): boolean { return true; } }
+    }
+    export namespace B { export function parse(): number { return 1; } }
+    export function run() { A.parse('a'); B.parse(); A.Nested.parse(); }
+  `);
+  const byName = new Map(graph.symbols.map((symbol) => [symbol.qualifiedName, symbol]));
+  assert.equal(byName.get("A.parse")?.signatures.length, 3);
+  assert.equal(byName.get("B.parse")?.signatures.length, 1);
+  assert.equal(byName.get("A.Nested.parse")?.signatures[0]?.returnType.display, "boolean");
+  assert.equal(byName.get("A.hidden")?.exported, false);
+  assert.equal(new Set(graph.symbols.map((symbol) => symbol.id)).size, graph.symbols.length);
+  for (const name of ["A.parse", "B.parse", "A.Nested.parse"]) {
+    assert.ok(graph.relationships.some((relationship) =>
+      relationship.display === name && relationship.to === byName.get(name)?.id));
+  }
+});
+
+test("marks unresolved and nested dynamic types incomplete while preserving precise generics", () => {
+  const { graph } = analyzeSource(`
+    type Box<T> = { value: T };
+    export function missing(value: MissingType): MissingType { return value; }
+    export function nested(value: Promise<MissingType[]>): Promise<MissingType[]> { return value; }
+    export function dynamic(value: Array<any>): Promise<unknown> { return Promise.resolve(value); }
+    export function alias(value: Box<MissingType>): Box<MissingType> { return value; }
+    export function union(value: string | Promise<any>): string | Promise<any> { return value; }
+    export function tuple(value: [string, MissingType]): [string, MissingType] { return value; }
+    export function precise(value: Promise<string[]>): Promise<string[]> { return value; }
+    export function generic<T>(value: T): T { return value; }
+    export function brokenThrow(): never { throw new MissingError(); }
+    export function validThrow(): never { throw new Error('failure'); }
+  `);
+  for (const name of ["missing", "nested", "dynamic", "alias", "union", "tuple"]) {
+    const signature = graph.symbols.find((symbol) => symbol.name === name)?.signatures[0];
+    assert.equal(signature?.parameters[0]?.typeFact.confidence, "incomplete", name);
+    assert.equal(signature?.returnType.confidence, "incomplete", name);
+  }
+  for (const name of ["precise", "generic"]) {
+    const signature = graph.symbols.find((symbol) => symbol.name === name)?.signatures[0];
+    assert.equal(signature?.parameters[0]?.typeFact.confidence, "exact", name);
+    assert.equal(signature?.returnType.confidence, "exact", name);
+  }
+  assert.equal(graph.symbols.find((symbol) => symbol.name === "brokenThrow")?.throws[0]?.confidence, "incomplete");
+  assert.equal(graph.symbols.find((symbol) => symbol.name === "validThrow")?.throws[0]?.confidence, "exact");
+});
