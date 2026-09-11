@@ -121,6 +121,10 @@ with callable signatures, “Defined in” source links, Parameters subheadings,
 Returns sections. Existing supported API pages can be checked without rewriting
 them into Vibedoc's list format.
 
+A [Python adapter prototype](adapters/python/README.md) supports explicit Markdown
+bindings to functions and methods using conservative AST annotation facts. It runs
+without importing project code; unsupported types remain explicitly unverified.
+
 ## Commands
 
 ```text

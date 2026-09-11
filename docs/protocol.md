@@ -41,6 +41,12 @@ The TypeScript adapter accepts `.ts`, `.tsx`, `.js`, and `.jsx`. It uses the
 compiler options in each supplied `tsconfig.json` or `jsconfig.json` and uses
 the compiler implementation pinned with the adapter.
 
+The Python prototype uses `sourceGlobs` and rejects nonempty `projects`. It
+reports written AST annotations rather than inferred runtime behavior. Missing
+or unresolved types use `incomplete` confidence. Defaults map to parameter
+optionality; protocol v1 does not carry their expressions or Python parameter
+calling conventions. See [its supported subset](../adapters/python/README.md).
+
 ## Shutdown
 
 ```json

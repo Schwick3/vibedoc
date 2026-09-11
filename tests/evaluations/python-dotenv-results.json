@@ -1,0 +1,267 @@
+{
+  "repository": "https://github.com/theskumar/python-dotenv",
+  "revision": "a00cb2eed0704cd6d2071b2004c37e95ccc86ee5",
+  "runtime": "3.12.0",
+  "checks": {
+    "upstreamReadme": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 1,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G010",
+          "message": "No structural claims were checked in this reference document; its API documentation has not been verified.",
+          "evidence": []
+        }
+      ]
+    },
+    "validReference": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 7,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": []
+    },
+    "mutatedReference": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 2,
+        "warnings": 1,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 4,
+        "contradictedStructuralClaims": 2,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G004",
+          "message": "Parameter `filename` is not documented.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 338,
+                  "column": 5
+                },
+                "end": {
+                  "line": 338,
+                  "column": 18
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G003",
+          "message": "`missing` is not a parameter of `find_dotenv`.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 337,
+                  "column": 1
+                },
+                "end": {
+                  "line": 385,
+                  "column": 14
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G006",
+          "message": "Return type is documented as `int` but the source type is `str`.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 337,
+                  "column": 1
+                },
+                "end": {
+                  "line": 385,
+                  "column": 14
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "partialAnnotations": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 3,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 10,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 3,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `dotenv_path` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 389,
+                  "column": 5
+                },
+                "end": {
+                  "line": 389,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `stream` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 390,
+                  "column": 5
+                },
+                "end": {
+                  "line": 390,
+                  "column": 30
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `encoding` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 394,
+                  "column": 5
+                },
+                "end": {
+                  "line": 394,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "partialAnnotationsDenyWarnings": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 0,
+        "warnings": 3,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 10,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 3,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `dotenv_path` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 389,
+                  "column": 5
+                },
+                "end": {
+                  "line": 389,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `stream` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 390,
+                  "column": 5
+                },
+                "end": {
+                  "line": 390,
+                  "column": 30
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `encoding` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 394,
+                  "column": 5
+                },
+                "end": {
+                  "line": 394,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

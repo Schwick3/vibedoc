@@ -29,6 +29,10 @@ jobs:
       - run: npm test
       - run: ./scripts/test-e2e.sh
       - run: ./scripts/test-evaluation.sh
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python3 -m unittest discover -s adapters/python -p 'test_*.py'
 
   real-projects:
     runs-on: ubuntu-latest
@@ -65,3 +69,13 @@ jobs:
           persist-credentials: false
       - run: npm install --prefix target/typedoc-generator --save-exact --ignore-scripts --no-audit --no-fund typedoc@0.28.20 typedoc-plugin-markdown@4.13.0 typescript@5.8.3
       - run: node scripts/test-generated-typedoc.mjs target/real-projects/idb-keyval target/typedoc-generator
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/checkout@v6
+        with:
+          repository: theskumar/python-dotenv
+          ref: a00cb2eed0704cd6d2071b2004c37e95ccc86ee5
+          path: target/real-projects/python-dotenv
+          persist-credentials: false
+      - run: python3 scripts/test-python-project.py target/real-projects/python-dotenv

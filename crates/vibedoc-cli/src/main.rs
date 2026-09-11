@@ -347,10 +347,12 @@ fn analyze_adapter(
             .iter()
             .map(|project| normalize_path(&absolutize(root, Path::new(project))))
             .collect()
-    } else {
+    } else if name == "typescript" {
         discover_project_config(cwd, root)
             .map(|project| vec![normalize_path(&project)])
             .unwrap_or_default()
+    } else {
+        Vec::new()
     };
     let mut client = AdapterClient::start(AdapterRunOptions {
         name: name.into(),
