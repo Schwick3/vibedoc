@@ -486,7 +486,7 @@ fn check_grounding(
                 covered_headings.insert(index);
             }
         }
-        match resolve_explicit(&scope.directive, graph) {
+        match resolve_typedoc(&scope.directive, graph) {
             Ok(symbol) => validate_reference_claims(
                 document,
                 symbol,
@@ -574,6 +574,49 @@ fn check_grounding(
                 false,
             );
         }
+    }
+}
+
+fn resolve_typedoc<'a>(
+    directive: &BindingDirective,
+    graph: &'a FactGraph,
+) -> Result<&'a Symbol, String> {
+    let path = normalize_source_path(directive.path.as_deref().unwrap());
+    let adapter = directive.adapter.as_deref().unwrap();
+    // Resolve files before symbols: a coincidentally unique name must not hide
+    // an ambiguous abbreviated filename. Include files with no exported symbols.
+    let paths = graph
+        .files
+        .iter()
+        .map(|file| file.path.as_str())
+        .chain(
+            graph
+                .symbols
+                .iter()
+                .filter(|s| s.adapter == adapter)
+                .map(|s| s.declaration.path.as_str()),
+        )
+        .map(normalize_source_path)
+        .collect::<BTreeSet<_>>();
+    if paths.contains(&path) {
+        return resolve_explicit(directive, graph);
+    }
+    let suffix = format!("/{path}");
+    let matches = paths
+        .iter()
+        .filter(|candidate| candidate.ends_with(&suffix))
+        .collect::<Vec<_>>();
+    match matches.as_slice() {
+        [resolved] => {
+            let mut directive = directive.clone();
+            directive.path = Some((*resolved).clone());
+            resolve_explicit(&directive, graph)
+        }
+        [] => resolve_explicit(directive, graph),
+        _ => Err(format!(
+            "TypeDoc source path `{path}` matches {} source files.",
+            matches.len()
+        )),
     }
 }
 
@@ -735,7 +778,8 @@ fn validate_reference_claims(
         };
         result.verification.verified_structural_claims += 1;
         if let Some(documented_type) = &claim.type_name {
-            if parameter.destructured
+            if claim.type_incomplete
+                || parameter.destructured
                 || parameter.type_fact.confidence == Confidence::Incomplete
                 || matches!(parameter.type_fact.normalized.as_str(), "any" | "unknown")
             {
@@ -744,19 +788,25 @@ fn validate_reference_claims(
                     &mut result.diagnostics,
                     config,
                     "VDOC-G008",
-                    format!(
-                        "The type of `{}` is not precise enough to compare.",
-                        claim.name
-                    ),
+                    if claim.type_incomplete {
+                        format!(
+                            "The documented callback type of `{}` omits parameter annotations; it was not compared.",
+                            claim.name
+                        )
+                    } else {
+                        format!(
+                            "The type of `{}` is not precise enough to compare.",
+                            claim.name
+                        )
+                    },
                     document,
                     claim.bytes.clone(),
                     vec![parameter.location.clone()],
                     None,
                     false,
                 );
-            } else if normalize_type(documented_type)
-                != normalize_type(&parameter.type_fact.normalized)
-                && normalize_type(documented_type) != normalize_type(&parameter.type_fact.display)
+            } else if !equivalent_type(documented_type, &parameter.type_fact.normalized)
+                && !equivalent_type(documented_type, &parameter.type_fact.display)
                 && !(parameter.optional
                     && normalize_type(documented_type)
                         == normalize_type(&parameter.type_fact.display)
@@ -818,8 +868,8 @@ fn validate_reference_claims(
                 None,
                 false,
             );
-        } else if normalize_type(&claim.value) != normalize_type(&signature.return_type.normalized)
-            && normalize_type(&claim.value) != normalize_type(&signature.return_type.display)
+        } else if !equivalent_type(&claim.value, &signature.return_type.normalized)
+            && !equivalent_type(&claim.value, &signature.return_type.display)
         {
             result.verification.contradicted_structural_claims += 1;
             push(
@@ -1013,6 +1063,24 @@ fn normalize_source_path(path: &str) -> String {
     path.trim_start_matches("./").replace('\\', "/")
 }
 
+// Only canonicalize unions of simple named types. Function, literal, conditional,
+// and nested-union syntax needs a type parser and is deliberately excluded.
+fn equivalent_type(left: &str, right: &str) -> bool {
+    if normalize_type(left) == normalize_type(right) {
+        return true;
+    }
+    let atom = Regex::new(r"^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<[A-Za-z_$][\w$]*(?:\s*,\s*[A-Za-z_$][\w$]*)*>)?(?:\[\])*$").unwrap();
+    let members = |value: &str| -> Option<BTreeSet<String>> {
+        let parts = value.split('|').map(str::trim).collect::<Vec<_>>();
+        (parts.len() > 1 && parts.iter().all(|part| atom.is_match(part)))
+            .then(|| parts.into_iter().map(normalize_type).collect())
+    };
+    match (members(left), members(right)) {
+        (Some(left), Some(right)) => left == right,
+        _ => false,
+    }
+}
+
 fn normalize_type(value: &str) -> String {
     value
         .chars()
@@ -1090,6 +1158,18 @@ mod tests {
             throws: Vec::new(),
             confidence: Confidence::Exact,
         }
+    }
+
+    #[test]
+    fn simple_union_order_is_irrelevant_but_nested_syntax_is_not_flattened() {
+        assert!(equivalent_type(
+            "IDBTransaction | IDBRequest<T>",
+            "IDBRequest<T>|IDBTransaction"
+        ));
+        assert!(!equivalent_type("A | B", "A | C"));
+        assert!(!equivalent_type("Box<A | B>", "Box<B | A>"));
+        assert!(!equivalent_type("() => A | B", "B | () => A"));
+        assert!(!equivalent_type("'A | B'", "'B | A'"));
     }
 
     #[test]
@@ -1533,6 +1613,59 @@ This simple function handles all of the authentication stuff for every user in t
         );
         assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
         assert_eq!(result.verification.verified_structural_claims, 3);
+        let default_layout = source
+            .replace("### run()", "### Function: run()")
+            .replace(
+                "```ts\nrun(value?): string;\n```",
+                "> **run**(`value?`): `string`",
+            )
+            .replace("src/a.ts:1", "a.ts:1");
+        let check = |source: String, graph: &FactGraph| {
+            check_documents(
+                &[parse_document(
+                    "/tmp/api.md",
+                    "api.md",
+                    DocumentProfile::Reference,
+                    source,
+                )],
+                graph,
+                &Config::default(),
+                CheckOptions::default(),
+            )
+        };
+        let checked = check(default_layout.clone(), &graph);
+        assert!(checked.diagnostics.is_empty(), "{:?}", checked.diagnostics);
+        assert_eq!(checked.verification.verified_structural_claims, 3);
+        let abbreviated = default_layout.replace(
+            "##### value?\n\n`string`",
+            "##### value?\n\n(`oldValue`) => `T`",
+        );
+        let checked = check(abbreviated, &graph);
+        assert_eq!(checked.verification.contradicted_structural_claims, 0);
+        assert_eq!(checked.verification.unverified_structural_claims, 1);
+        assert!(checked.diagnostics.iter().any(|d| d.rule_id == "VDOC-G008"));
+        let mut duplicate_file = graph.clone();
+        duplicate_file.files.push(vibedoc_protocol::SourceFile {
+            path: "other/a.ts".into(),
+            language: "typescript".into(),
+        });
+        let checked = check(default_layout.clone(), &duplicate_file);
+        assert_eq!(checked.verification.verified_structural_claims, 0);
+        assert!(checked.diagnostics.iter().any(|d| d.rule_id == "VDOC-G001"));
+        // Explicit paths remain exact; a complete label still wins over suffix matches.
+        assert!(check(source.into(), &duplicate_file).diagnostics.is_empty());
+        for invalid in [
+            default_layout.replace("**run**", "**different**"),
+            default_layout.replace("> **run**", "**run**"),
+            default_layout.replace(
+                "> **run**(`value?`): `string`",
+                "```md\n> **run**(`value?`): `string`\n```",
+            ),
+        ] {
+            let checked = check(invalid, &graph);
+            assert_eq!(checked.verification.verified_structural_claims, 0);
+            assert!(checked.diagnostics.iter().any(|d| d.rule_id == "VDOC-G010"));
+        }
         let wrong = source.replace("#### Returns\n\n`string`", "#### Returns\n\n`number`");
         let document = parse_document("/tmp/api.md", "api.md", DocumentProfile::Reference, wrong);
         let result = check_documents(

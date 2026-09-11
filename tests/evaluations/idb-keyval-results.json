@@ -1,0 +1,127 @@
+{
+  "repository": "https://github.com/jakearchibald/idb-keyval",
+  "revision": "17a69a1165bef486d88950cb47d3913744f038ac",
+  "generator": {
+    "typedoc": "0.28.20",
+    "typedoc-plugin-markdown": "4.13.0",
+    "typescript": "5.8.3"
+  },
+  "layout": "typedoc-plugin-markdown defaults; no signature, source-path, or parameter-format overrides",
+  "generatedFunctions": [
+    "clear.md",
+    "createStore.md",
+    "del.md",
+    "delMany.md",
+    "entries.md",
+    "get.md",
+    "getMany.md",
+    "keys.md",
+    "promisifyRequest.md",
+    "set.md",
+    "setMany.md",
+    "update.md",
+    "values.md"
+  ],
+  "generatedFileSha256": {
+    "clear.md": "268796332eb2d1fddc0901b9fe16e292496cfc32a5406b4b7efdff78063d0d30",
+    "createStore.md": "5d039099113fe39ab053ce75a236a3ad6ba903ddf102b9947ed8a8e4f640ae4c",
+    "del.md": "7c6f4aa4523128c5958b160b8909d503a603a37b6dd68620be99d4b3544e8c5d",
+    "delMany.md": "6e895addd8f5014d0fcabfc04dd345d6185a051d214ee2117d3318359be6c9df",
+    "entries.md": "9365303d7ffef625119552fa1e55ede9369f1f6a19f1da6b7ce318022df12efb",
+    "get.md": "23ca5869513e8f011c9bf89536db06a8687478e94c71c840a0817ea7af7cc289",
+    "getMany.md": "3d787d681476e59b05a6b4bbff24f768d322d507572bec9a318df6eefe3e1012",
+    "keys.md": "603c91978fea721d75a2dcc802536b20a7e91167e410fe4890c46dcb5f05d444",
+    "promisifyRequest.md": "36367e51aad8f43b23215526a8d66ced2f19a22026203b5ae2b50c83c56af8c4",
+    "set.md": "42bebbf6bb7eaa04dc68055f4a830ef8ec5a0843fc0a75fdc29f09d68d370663",
+    "setMany.md": "565f8d0075c0b9f2a39ddf3484e08d6531140cdadc1c380dab1c47bb765bad02",
+    "update.md": "c4c62832528b5e1f1fcbbb697bad0cb65fb8a4213af6e3166370e0c0a3acd5a4",
+    "values.md": "ba210be1b49fa48b9c139d7a9394bd58a7c89db7101ac08b5727a6561325837a"
+  },
+  "facts": {
+    "files": 1,
+    "symbols": 17,
+    "generatedFunctionsFoundInSource": 13,
+    "clearReturn": {
+      "display": "Promise<void>",
+      "normalized": "Promise<void>",
+      "confidence": "exact"
+    }
+  },
+  "check": {
+    "exitCode": 0,
+    "denyWarningsExitCode": 1,
+    "summary": {
+      "errors": 0,
+      "warnings": 3,
+      "info": 0,
+      "documents": 13
+    },
+    "verification": {
+      "verifiedStructuralClaims": 56,
+      "contradictedStructuralClaims": 0,
+      "unverifiedStructuralClaims": 3,
+      "freeFormProseEvaluated": false
+    },
+    "diagnostics": [
+      {
+        "file": "set.md",
+        "ruleId": "VDOC-G008",
+        "message": "The type of `value` is not precise enough to compare."
+      },
+      {
+        "file": "setMany.md",
+        "ruleId": "VDOC-G008",
+        "message": "The type of `entries` is not precise enough to compare."
+      },
+      {
+        "file": "update.md",
+        "ruleId": "VDOC-G008",
+        "message": "The documented callback type of `updater` omits parameter annotations; it was not compared."
+      }
+    ]
+  },
+  "mutation": {
+    "change": "clear Returns: Promise<void> -> Promise<string>",
+    "exitCode": 1,
+    "verification": {
+      "verifiedStructuralClaims": 55,
+      "contradictedStructuralClaims": 1,
+      "unverifiedStructuralClaims": 3,
+      "freeFormProseEvaluated": false
+    },
+    "diagnostic": {
+      "ruleId": "VDOC-G006",
+      "severity": "error",
+      "message": "Return type is documented as `Promise<string>` but the source type is `Promise<void>`.",
+      "document": {
+        "path": "functions/clear.md",
+        "range": {
+          "start": {
+            "line": 25,
+            "column": 1
+          },
+          "end": {
+            "line": 26,
+            "column": 1
+          }
+        }
+      },
+      "evidence": [
+        {
+          "path": "src/index.ts",
+          "range": {
+            "start": {
+              "line": 187,
+              "column": 1
+            },
+            "end": {
+              "line": 192,
+              "column": 2
+            }
+          }
+        }
+      ],
+      "suggestion": "Use `Promise<void>`."
+    }
+  }
+}

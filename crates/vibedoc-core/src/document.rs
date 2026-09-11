@@ -61,6 +61,7 @@ pub struct ReferenceClaims {
 pub struct DocumentedParameter {
     pub name: String,
     pub type_name: Option<String>,
+    pub type_incomplete: bool,
     pub bytes: Range<usize>,
 }
 
@@ -260,10 +261,13 @@ impl Document {
     /// Recognize TypeDoc method/function sections only when a TS signature and
     /// a local source-path label accompany them. Link destinations are never fetched.
     pub fn typedoc_scopes(&self) -> Vec<BindingScope> {
-        let method = Regex::new(r"^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\(\)$").unwrap();
+        let method =
+            Regex::new(r"^(?:Function: |Method: )?([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\(\)$")
+                .unwrap();
         let function =
             Regex::new(r"^\s*(?:declare\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*(?:<|\()")
                 .unwrap();
+        let quotes = typedoc_quotes(&self.source);
         let mut scopes = Vec::new();
         for (index, heading) in self.headings.iter().enumerate() {
             let Some(name) = method.captures(&heading.text).map(|c| c[1].to_string()) else {
@@ -283,6 +287,7 @@ impl Document {
             let Some(block) = self
                 .typed_code_blocks
                 .iter()
+                .chain(quotes.iter())
                 .find(|b| b.bytes.start >= heading.bytes.end && b.bytes.end <= preamble_end)
             else {
                 continue;
@@ -351,6 +356,8 @@ impl Document {
     }
 
     pub fn typedoc_claims(&self, scope: &BindingScope) -> ReferenceClaims {
+        let abbreviated_callback =
+            Regex::new(r"^\([A-Za-z_$][\w$]*(?:\s*,\s*[A-Za-z_$][\w$]*)*\)\s*=>").unwrap();
         let mut claims = ReferenceClaims::default();
         for (index, heading) in self.headings.iter().enumerate() {
             if heading.bytes.start < scope.bytes.start
@@ -396,10 +403,15 @@ impl Document {
                         .get(parameter_index + 1)
                         .map_or(end, |h| h.bytes.start)
                         .min(end);
+                    let type_name = typedoc_type(&self.source, parameter.bytes.end..parameter_end)
+                        .map(|t| t.value);
                     claims.parameters.push(DocumentedParameter {
                         name: name.into(),
-                        type_name: typedoc_type(&self.source, parameter.bytes.end..parameter_end)
-                            .map(|t| t.value),
+                        // TypeDoc may omit callback parameter annotations.
+                        type_incomplete: type_name
+                            .as_ref()
+                            .is_some_and(|t| abbreviated_callback.is_match(t)),
+                        type_name,
                         bytes: parameter.bytes.clone(),
                     });
                 }
@@ -468,6 +480,7 @@ impl Document {
                         if let Some(name) = line_spans.first() {
                             claims.parameters.push(DocumentedParameter {
                                 name: name.text.clone(),
+                                type_incomplete: false,
                                 type_name: line_spans.get(1).map(|span| span.text.clone()),
                                 bytes: line.bytes,
                             });
@@ -506,6 +519,63 @@ impl Document {
         }
         claims
     }
+}
+
+// Parse Markdown structure so fenced examples cannot masquerade as signatures.
+fn typedoc_quotes(source: &str) -> Vec<TextSpan> {
+    let mut quotes = Vec::new();
+    let mut current: Option<TextSpan> = None;
+    let mut depth = 0;
+    let mut has_code = false;
+    let mut has_strong = false;
+    let mut invalid = false;
+    for (event, range) in Parser::new(source).into_offset_iter() {
+        match event {
+            Event::Start(Tag::BlockQuote(_)) => {
+                depth += 1;
+                if depth == 1 {
+                    current = Some(TextSpan {
+                        text: String::new(),
+                        bytes: range.clone(),
+                    });
+                    has_code = false;
+                    has_strong = false;
+                    invalid = false;
+                } else {
+                    invalid = true;
+                }
+            }
+            Event::End(TagEnd::BlockQuote(_)) => {
+                depth -= 1;
+                if depth == 0
+                    && let Some(mut quote) = current.take()
+                {
+                    quote.bytes.end = range.end;
+                    if has_code && has_strong && !invalid {
+                        quotes.push(quote);
+                    }
+                }
+            }
+            Event::Start(Tag::CodeBlock(_) | Tag::Heading { .. }) if depth > 0 => invalid = true,
+            Event::Start(Tag::Strong) if depth > 0 => has_strong = true,
+            Event::Text(text) | Event::Code(text) if depth > 0 => {
+                // Code markup distinguishes signatures from ordinary quoted prose.
+                if source[range.clone()].starts_with('`') {
+                    has_code = true;
+                }
+                if let Some(quote) = current.as_mut() {
+                    quote.text.push_str(&text);
+                }
+            }
+            Event::SoftBreak | Event::HardBreak if depth > 0 => {
+                if let Some(quote) = current.as_mut() {
+                    quote.text.push(' ');
+                }
+            }
+            _ => {}
+        }
+    }
+    quotes
 }
 
 // Render only the first type paragraph, preserving generic punctuation and

@@ -45,7 +45,12 @@ The reference profile also recognizes TypeDoc-style method sections such as
 `### clear()` and standalone function pages beginning with a fenced `ts` or
 `typescript` signature. Recognition requires a matching callable name and a
 `Defined in: [src/file.ts:123](...)` link before the next section heading.
-The repository-relative label selects source facts; the URL is never fetched.
+Default blockquoted signatures with bold names under headings such as
+`# Function: clear()` are also recognized. The source label selects source facts;
+the URL is never fetched. Exact repository paths take precedence. An abbreviated
+label such as `index.ts` must match exactly one source-file path suffix, including
+files without exported symbols. Multiple matching files require an explicit
+directive, even when only one contains the named callable.
 Stale line numbers do not prevent a unique path/name match. Ambiguous matches
 require an explicit `vibedoc:source` directive, which takes precedence.
 
@@ -53,9 +58,11 @@ Within a recognized section, Parameters subheadings supply names and the first
 type paragraph; the first Returns paragraph supplies the return type. Links,
 split inline-code spans, escaped generic brackets, leading union bars, optional
 `?` names, and default-value annotations are supported. Optional parameters may
-omit the compiler's trailing `| undefined` from their documented type.
+omit the compiler's trailing `| undefined` from their documented type. Reordered
+unions of simple named types compare equally. Callback types whose parameter
+annotations were omitted by TypeDoc are counted as unverified.
 
-The signature fence identifies the callable; its contents are not a second set
+The signature fence or blockquote identifies the callable; its contents are not a second set
 of claims. Dedicated Parameters and Returns sections are compared. Constructors,
 properties, parameter tables, and arbitrary examples are outside this format.
 Overloads and incomplete compiler types retain their existing unverified behavior.

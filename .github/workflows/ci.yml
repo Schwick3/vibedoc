@@ -57,3 +57,11 @@ jobs:
           persist-credentials: false
       - run: npm run test:real-project -- target/real-projects/mitt
       - run: npm run test:monorepo -- target/real-projects/query
+      - uses: actions/checkout@v6
+        with:
+          repository: jakearchibald/idb-keyval
+          ref: 17a69a1165bef486d88950cb47d3913744f038ac
+          path: target/real-projects/idb-keyval
+          persist-credentials: false
+      - run: npm install --prefix target/typedoc-generator --save-exact --ignore-scripts --no-audit --no-fund typedoc@0.28.20 typedoc-plugin-markdown@4.13.0 typescript@5.8.3
+      - run: node scripts/test-generated-typedoc.mjs target/real-projects/idb-keyval target/typedoc-generator
