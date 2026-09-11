@@ -184,6 +184,16 @@ pub fn all_rule_metadata() -> Vec<RuleMetadata> {
             "Correct the symbol name, select the correct project, or add an explicit source directive.",
         ),
         metadata(
+            "VDOC-G010",
+            "No structural claims checked",
+            Severity::Warning,
+            false,
+            "A reference document with no recognized structural claims has no API verification coverage.",
+            "Reference documentation containing only prose or fenced signatures.",
+            "Bind a source symbol and document its Parameters, Returns, or Errors with supported inline-code syntax.",
+            "Add a source binding and supported reference sections, or use the guide profile for prose-only documentation.",
+        ),
+        metadata(
             "VDOC-X001",
             "Experimental return or throw claim",
             Severity::Warning,
@@ -243,7 +253,23 @@ pub fn check_documents(
     for document in documents {
         check_language(document, config, &mut result.diagnostics);
         check_structure(document, config, &mut result.diagnostics);
+        let previous = result.verification.clone();
         check_grounding(document, graph, config, options, &mut result);
+        if document.profile == DocumentProfile::Reference
+            && previous.verified_structural_claims == result.verification.verified_structural_claims
+            && previous.contradicted_structural_claims
+                == result.verification.contradicted_structural_claims
+            && previous.unverified_structural_claims
+                == result.verification.unverified_structural_claims
+        {
+            push(
+                &mut result.diagnostics, config, "VDOC-G010",
+                "No structural claims were checked in this reference document; its API documentation has not been verified.".into(),
+                document, 0..0, Vec::new(),
+                Some("Add a source binding and supported Parameters, Returns, or Errors sections, or use the guide profile for prose-only documentation.".into()),
+                false,
+            );
+        }
     }
     result.diagnostics.sort_by(|left, right| {
         (
@@ -1403,6 +1429,79 @@ This simple function handles all of the authentication stuff for every user in t
             assert!(diagnostic.experimental);
         }
         assert!(result.verification.free_form_prose_evaluated);
+    }
+
+    #[test]
+    fn zero_coverage_is_per_reference_document_and_can_be_disabled() {
+        let declaration = location("src/a.ts");
+        let graph = FactGraph {
+            symbols: vec![symbol(
+                "typescript:src/a.ts#value",
+                "src/a.ts",
+                "value",
+                "value",
+                vec![Signature {
+                    parameters: vec![],
+                    return_type: TypeFact {
+                        display: "string".into(),
+                        normalized: "string".into(),
+                        confidence: Confidence::Exact,
+                    },
+                    declaration,
+                }],
+            )],
+            ..FactGraph::default()
+        };
+        let documents = vec![
+            parse_document(
+                "/tmp/valid.md",
+                "valid.md",
+                DocumentProfile::Reference,
+                "# `value`\n\n## Returns\n\n`string`\n".into(),
+            ),
+            parse_document(
+                "/tmp/empty.md",
+                "empty.md",
+                DocumentProfile::Reference,
+                "# API\n\n```ts\nvalue(): string;\n```\n".into(),
+            ),
+            parse_document(
+                "/tmp/guide.md",
+                "guide.md",
+                DocumentProfile::Guide,
+                "# Guide\n".into(),
+            ),
+            parse_document(
+                "/tmp/wrong.md",
+                "wrong.md",
+                DocumentProfile::Reference,
+                "# `value`\n\n## Returns\n\n`number`\n".into(),
+            ),
+        ];
+        let result = check_documents(
+            &documents,
+            &graph,
+            &Config::default(),
+            CheckOptions::default(),
+        );
+        let warnings = result
+            .diagnostics
+            .iter()
+            .filter(|d| d.rule_id == "VDOC-G010")
+            .collect::<Vec<_>>();
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(warnings[0].document.path, "empty.md");
+        assert_eq!(warnings[0].document.range.start.line, 1);
+        assert_eq!(result.verification.verified_structural_claims, 1);
+        assert_eq!(result.verification.contradicted_structural_claims, 1);
+        let mut config = Config::default();
+        config.rules.insert("VDOC-G010".into(), RuleLevel::Off);
+        assert!(
+            check_documents(&documents, &graph, &config, CheckOptions::default())
+                .diagnostics
+                .iter()
+                .all(|d| d.rule_id != "VDOC-G010")
+        );
     }
 
     #[test]

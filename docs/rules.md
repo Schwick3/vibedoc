@@ -58,6 +58,7 @@ Reference sections use these shapes:
 | `VDOC-G007` | warning | A documented error lacks direct static throw evidence. |
 | `VDOC-G008` | warning | Compiler facts are insufficient for comparison. |
 | `VDOC-G009` | error | A reference heading names no source symbol. |
+| `VDOC-G010` | warning | A reference document contains no recognized structural claims to check. |
 | `VDOC-X001` | warning | An experimental return or throw pattern lacks direct evidence. |
 | `VDOC-X002` | warning | An experimental operation pattern lacks a direct relationship. |
 

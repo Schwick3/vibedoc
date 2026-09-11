@@ -49,7 +49,7 @@
       "exitCode": 0,
       "summary": {
         "errors": 0,
-        "warnings": 0,
+        "warnings": 1,
         "info": 0,
         "documents": 1
       },
@@ -59,7 +59,13 @@
         "unverifiedStructuralClaims": 0,
         "freeFormProseEvaluated": false
       },
-      "diagnostics": []
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G010",
+          "message": "No structural claims were checked in this reference document; its API documentation has not been verified.",
+          "line": 1
+        }
+      ]
     },
     "validReference": {
       "exitCode": 0,

@@ -1,7 +1,7 @@
 # Real-project evaluation: TanStack Query
 
-Evaluated September 10, 2026 using Vibedoc 0.1.2 with the monorepo correctness
-changes and the pinned TypeScript 6.0.3 compiler.
+Re-evaluated September 11, 2026 using Vibedoc 0.1.2 with the monorepo correctness
+changes, explicit zero-coverage warnings, and the pinned TypeScript 6.0.3 compiler.
 
 Upstream: [TanStack/query](https://github.com/TanStack/query), revision
 [`7452ef68a2901fc9a5673a8e5f53185a506b182f`](https://github.com/TanStack/query/tree/7452ef68a2901fc9a5673a8e5f53185a506b182f).
@@ -45,7 +45,7 @@ diagnostics are surfaced as adapter warnings.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Original QueryClient page, guide | 0 | 0 | 0 | 0 | 0 |
 | Original persistence page, guide | 0 | 2 | 0 | 0 | 0 |
-| Original QueryClient page, reference | 0 | 0 | 0 | 0 | 0 |
+| Original QueryClient page, reference | 0 | 1 | 0 | 0 | 0 |
 | Controlled correct references | 0 | 0 | 2 | 0 | 0 |
 | Controlled incorrect references | 2 | 0 | 0 | 2 | 0 |
 | Named dynamic return type | 0 | 1 | 2 | 0 | 1 |
@@ -57,7 +57,8 @@ positive API contradictions were observed in these runs.
 
 The native QueryClient page exposes a coverage gap: ordinary method headings and
 fenced signatures do not match Vibedoc's binding syntax. Even the reference
-profile therefore verifies zero claims. Manual inspection of three upstream
+profile therefore verifies zero claims and now emits `VDOC-G010`, explicitly warning
+that the document has not been verified. Manual inspection of three upstream
 return claims (`clear(): void`, `isFetching(): number`, and
 `cancelQueries(): Promise<void>`) confirms agreement with source, but all three
 are outside the measured native verification coverage. Zero reported unverified
@@ -72,8 +73,9 @@ trades coverage for avoiding confident conclusions from incomplete types.
 
 These small, selected samples do not establish real-world precision or recall.
 The evidence supports the compiler fixes and identifies native documentation
-coverage as the next product gap. TypeDoc-style ingestion or clearer zero-coverage
-reporting should precede claims of broad API-documentation verification.
+coverage as the next product gap. Explicit zero-coverage reporting now prevents a
+quiet pass, although the command still exits 0 unless `--deny-warnings` is used.
+TypeDoc-style ingestion remains future work.
 
 Machine-readable results: [query-results.json](query-results.json).
 

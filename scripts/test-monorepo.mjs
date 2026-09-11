@@ -67,7 +67,10 @@ try {
   check('upstreamQueryClientGuide', 'docs/framework/react/reference/classes/QueryClient.md', 'guide', 0);
   check('upstreamPersistenceGuide', 'docs/framework/react/plugins/persistQueryClient.md', 'guide', 0);
   // Also measure native reference coverage without adding bindings to upstream docs.
-  check('upstreamQueryClientReference', 'docs/framework/react/reference/classes/QueryClient.md', 'reference', 0);
+  const nativeReference = check('upstreamQueryClientReference', 'docs/framework/react/reference/classes/QueryClient.md', 'reference', 0);
+  assert.equal(nativeReference.verification.verifiedStructuralClaims, 0);
+  assert.equal(nativeReference.summary.warnings, 1);
+  assert.ok(nativeReference.diagnostics.some((d) => d.ruleId === 'VDOC-G010'));
   const valid = write('valid.md', '# Reference\n\n' + reference('QueryClient.clear', source('queryClient'), '## Returns\n\n`void`') + '\n' +
     reference('Subscribable.hasListeners', source('subscribable'), '## Returns\n\n`boolean`'));
   const clean = check('validReference', valid, 'reference', 0);

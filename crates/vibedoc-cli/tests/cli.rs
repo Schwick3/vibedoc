@@ -101,3 +101,77 @@ fn operational_json_error_uses_exit_code_two() {
             .contains("no Markdown")
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn reference_without_claims_warns_in_text_and_json_and_obeys_deny_warnings() {
+    let directory = tempfile::tempdir().unwrap();
+    fs::write(
+        directory.path().join("README.md"),
+        "# API\n\n```ts\nclear(): void;\n```\n",
+    )
+    .unwrap();
+    use std::os::unix::fs::PermissionsExt;
+    let adapter = directory.path().join("adapter");
+    fs::write(&adapter, r#"#!/bin/sh
+while IFS= read -r line; do
+  case "$line" in
+    *initialize*) printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":1,"adapter":{"name":"typescript","version":"0.1.0","runtime":"sh"},"capabilities":{"languages":[],"extensions":[],"relationships":[]}}}' ;;
+    *analyze*) printf '%s\n' '{"jsonrpc":"2.0","id":2,"result":{"graph":{"files":[],"symbols":[],"relationships":[]},"diagnostics":[]}}' ;;
+    *shutdown*) printf '%s\n' '{"jsonrpc":"2.0","id":3,"result":{}}'; exit 0 ;;
+  esac
+done
+"#).unwrap();
+    fs::set_permissions(&adapter, fs::Permissions::from_mode(0o755)).unwrap();
+    let command = format!("typescript={}", adapter.display());
+    let args = [
+        "check",
+        "README.md",
+        "--profile",
+        "reference",
+        "--format",
+        "json",
+        "--adapter-command",
+        &command,
+    ];
+    let output = run(directory.path(), &args);
+    assert_eq!(output.status.code(), Some(0));
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["summary"]["warnings"], 1);
+    assert_eq!(report["diagnostics"][0]["ruleId"], "VDOC-G010");
+    assert_eq!(report["verification"]["verifiedStructuralClaims"], 0);
+    let denied = run(
+        directory.path(),
+        &[
+            "check",
+            "README.md",
+            "--profile",
+            "reference",
+            "--deny-warnings",
+            "--adapter-command",
+            &command,
+        ],
+    );
+    assert_eq!(denied.status.code(), Some(1));
+    assert!(
+        String::from_utf8(denied.stdout)
+            .unwrap()
+            .contains("No structural claims were checked")
+    );
+    let guide = run(
+        directory.path(),
+        &[
+            "check",
+            "README.md",
+            "--profile",
+            "guide",
+            "--deny-warnings",
+        ],
+    );
+    assert_eq!(guide.status.code(), Some(0));
+    let explain = run(
+        directory.path(),
+        &["explain", "VDOC-G010", "--format", "json"],
+    );
+    assert_eq!(explain.status.code(), Some(0));
+}

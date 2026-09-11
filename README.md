@@ -111,6 +111,11 @@ The [report schema](schemas/vibedoc-report.schema.json) defines the JSON
 contract. A successful check can still contain warnings. Use
 `--deny-warnings` when warnings must fail the command.
 
+Reference documents with no recognized structural claims emit `VDOC-G010`:
+their API documentation has not been verified. This is evaluated per document,
+so verified claims in one file cannot hide zero coverage in another. Fenced
+signatures alone do not count as structural claims. Guide documents are exempt.
+
 ## Commands
 
 ```text
