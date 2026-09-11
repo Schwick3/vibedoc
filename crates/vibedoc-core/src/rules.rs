@@ -473,6 +473,42 @@ fn check_grounding(
     if document.profile != DocumentProfile::Reference {
         return;
     }
+    for scope in document.typedoc_scopes() {
+        if document.headings.iter().enumerate().any(|(i, h)| {
+            covered_headings.contains(&i)
+                && h.bytes.start >= scope.bytes.start
+                && h.bytes.start < scope.bytes.end
+        }) {
+            continue;
+        }
+        for (index, heading) in document.headings.iter().enumerate() {
+            if heading.bytes.start >= scope.bytes.start && heading.bytes.end <= scope.bytes.end {
+                covered_headings.insert(index);
+            }
+        }
+        match resolve_explicit(&scope.directive, graph) {
+            Ok(symbol) => validate_reference_claims(
+                document,
+                symbol,
+                &document.typedoc_claims(&scope),
+                config,
+                result,
+            ),
+            Err(message) => push(
+                &mut result.diagnostics,
+                config,
+                "VDOC-G001",
+                message,
+                document,
+                scope.directive.bytes.clone(),
+                Vec::new(),
+                Some(
+                    "Add an explicit source directive to disambiguate this TypeDoc section.".into(),
+                ),
+                false,
+            ),
+        }
+    }
     for (index, heading) in document.headings.iter().enumerate() {
         if covered_headings.contains(&index)
             || heading.code_spans.len() != 1
@@ -581,7 +617,19 @@ fn validate_scope(
     options: CheckOptions,
     result: &mut CheckResult,
 ) {
-    let claims = document.reference_claims(scope);
+    let typedoc_scopes = document.typedoc_scopes();
+    let typedoc = typedoc_scopes.iter().find(|candidate| {
+        candidate.bytes == scope.bytes
+            || (scope.heading_level == 0
+                && typedoc_scopes.len() == 1
+                && candidate.bytes.start >= scope.bytes.start
+                && candidate.bytes.end <= scope.bytes.end)
+    });
+    let claims = if let Some(typedoc) = typedoc {
+        document.typedoc_claims(typedoc)
+    } else {
+        document.reference_claims(scope)
+    };
     if document.profile == DocumentProfile::Reference {
         validate_reference_claims(document, symbol, &claims, config, result);
     }
@@ -709,6 +757,10 @@ fn validate_reference_claims(
             } else if normalize_type(documented_type)
                 != normalize_type(&parameter.type_fact.normalized)
                 && normalize_type(documented_type) != normalize_type(&parameter.type_fact.display)
+                && !(parameter.optional
+                    && normalize_type(documented_type)
+                        == normalize_type(&parameter.type_fact.display)
+                            .trim_end_matches("|undefined"))
             {
                 result.verification.contradicted_structural_claims += 1;
                 push(
@@ -1429,6 +1481,121 @@ This simple function handles all of the authentication stuff for every user in t
             assert!(diagnostic.experimental);
         }
         assert!(result.verification.free_form_prose_evaluated);
+    }
+
+    #[test]
+    fn typedoc_binds_source_path_and_checks_claims_without_duplicate_heading_binding() {
+        let source = "### run()\n\n```ts\nrun(value?): string;\n```\n\nDefined in: [src/a.ts:1](https://example.test/a)\n\n#### Parameters\n\n##### value?\n\n`string`\n\n#### Returns\n\n`string`\n";
+        let mut run = symbol(
+            "typescript:src/a.ts#Client.run",
+            "src/a.ts",
+            "run",
+            "Client.run",
+            vec![Signature {
+                parameters: vec![vibedoc_protocol::Parameter {
+                    name: "value".into(),
+                    type_fact: TypeFact {
+                        display: "string | undefined".into(),
+                        normalized: "string|undefined".into(),
+                        confidence: Confidence::Exact,
+                    },
+                    optional: true,
+                    rest: false,
+                    destructured: false,
+                    location: location("src/a.ts"),
+                }],
+                return_type: TypeFact {
+                    display: "string".into(),
+                    normalized: "string".into(),
+                    confidence: Confidence::Exact,
+                },
+                declaration: location("src/a.ts"),
+            }],
+        );
+        let mut other = run.clone();
+        other.id = "typescript:src/b.ts#Other.run".into();
+        other.declaration = location("src/b.ts");
+        let graph = FactGraph {
+            symbols: vec![run.clone(), other],
+            ..FactGraph::default()
+        };
+        let document = parse_document(
+            "/tmp/api.md",
+            "api.md",
+            DocumentProfile::Reference,
+            source.into(),
+        );
+        let result = check_documents(
+            &[document],
+            &graph,
+            &Config::default(),
+            CheckOptions::default(),
+        );
+        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+        assert_eq!(result.verification.verified_structural_claims, 3);
+        let wrong = source.replace("#### Returns\n\n`string`", "#### Returns\n\n`number`");
+        let document = parse_document("/tmp/api.md", "api.md", DocumentProfile::Reference, wrong);
+        let result = check_documents(
+            &[document],
+            &graph,
+            &Config::default(),
+            CheckOptions::default(),
+        );
+        assert_eq!(result.verification.contradicted_structural_claims, 1);
+        assert_eq!(result.diagnostics[0].rule_id, "VDOC-G006");
+        let mut ambiguous = graph.clone();
+        ambiguous.symbols[1].declaration.path = "src/a.ts".into();
+        ambiguous.symbols[1].qualified_name = "Other.run".into();
+        let document = parse_document(
+            "/tmp/api.md",
+            "api.md",
+            DocumentProfile::Reference,
+            source.into(),
+        );
+        let result = check_documents(
+            &[document],
+            &ambiguous,
+            &Config::default(),
+            CheckOptions::default(),
+        );
+        assert!(result.diagnostics.iter().any(|d| d.rule_id == "VDOC-G001"));
+        let explicit = format!(
+            "# API\n\n## Methods\n\n<!-- vibedoc:source adapter=\"typescript\" path=\"src/a.ts\" symbol=\"Client.run\" -->\n{source}"
+        );
+        let document = parse_document(
+            "/tmp/api.md",
+            "api.md",
+            DocumentProfile::Reference,
+            explicit,
+        );
+        let result = check_documents(
+            &[document],
+            &ambiguous,
+            &Config::default(),
+            CheckOptions::default(),
+        );
+        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+        assert_eq!(result.verification.verified_structural_claims, 3);
+        // An overload still abstains rather than selecting whichever matches the docs.
+        run.signatures.push(run.signatures[0].clone());
+        let graph = FactGraph {
+            symbols: vec![run],
+            ..FactGraph::default()
+        };
+        let document = parse_document(
+            "/tmp/api.md",
+            "api.md",
+            DocumentProfile::Reference,
+            source.into(),
+        );
+        let result = check_documents(
+            &[document],
+            &graph,
+            &Config::default(),
+            CheckOptions::default(),
+        );
+        assert_eq!(result.verification.verified_structural_claims, 0);
+        assert_eq!(result.verification.unverified_structural_claims, 2);
     }
 
     #[test]

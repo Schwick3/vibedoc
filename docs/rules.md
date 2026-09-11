@@ -39,6 +39,28 @@ Reference sections use these shapes:
 - `ErrorType`: Condition.
 ```
 
+## TypeDoc Markdown
+
+The reference profile also recognizes TypeDoc-style method sections such as
+`### clear()` and standalone function pages beginning with a fenced `ts` or
+`typescript` signature. Recognition requires a matching callable name and a
+`Defined in: [src/file.ts:123](...)` link before the next section heading.
+The repository-relative label selects source facts; the URL is never fetched.
+Stale line numbers do not prevent a unique path/name match. Ambiguous matches
+require an explicit `vibedoc:source` directive, which takes precedence.
+
+Within a recognized section, Parameters subheadings supply names and the first
+type paragraph; the first Returns paragraph supplies the return type. Links,
+split inline-code spans, escaped generic brackets, leading union bars, optional
+`?` names, and default-value annotations are supported. Optional parameters may
+omit the compiler's trailing `| undefined` from their documented type.
+
+The signature fence identifies the callable; its contents are not a second set
+of claims. Dedicated Parameters and Returns sections are compared. Constructors,
+properties, parameter tables, and arbitrary examples are outside this format.
+Overloads and incomplete compiler types retain their existing unverified behavior.
+The guide profile does not enable TypeDoc structural verification.
+
 ## Rules
 
 | Rule | Default | Meaning |

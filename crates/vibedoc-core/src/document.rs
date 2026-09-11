@@ -1,5 +1,5 @@
 use crate::config::DocumentProfile;
-use pulldown_cmark::{Event, HeadingLevel, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 use regex::Regex;
 use std::ops::Range;
 use std::path::PathBuf;
@@ -13,6 +13,7 @@ pub struct Document {
     pub source: String,
     pub prose: Vec<TextSpan>,
     pub code_spans: Vec<TextSpan>,
+    pub typed_code_blocks: Vec<TextSpan>,
     pub headings: Vec<Heading>,
     pub links: Vec<TextSpan>,
     pub directives: Vec<BindingDirective>,
@@ -89,14 +90,36 @@ pub fn parse_document(
     let mut headings = Vec::new();
     let mut links = Vec::new();
     let mut directives = Vec::new();
+    let mut typed_code_blocks = Vec::new();
+    let mut current_code_block: Option<TextSpan> = None;
     let mut code_block_depth = 0usize;
     let mut current_heading: Option<Heading> = None;
     let mut current_link: Option<TextSpan> = None;
 
     for (event, range) in parser {
         match event {
-            Event::Start(Tag::CodeBlock(_)) => code_block_depth += 1,
-            Event::End(TagEnd::CodeBlock) => code_block_depth = code_block_depth.saturating_sub(1),
+            Event::Start(Tag::CodeBlock(kind)) => {
+                code_block_depth += 1;
+                if matches!(kind, CodeBlockKind::Fenced(ref language) if matches!(language.as_ref(), "ts" | "typescript"))
+                {
+                    current_code_block = Some(TextSpan {
+                        text: String::new(),
+                        bytes: range.clone(),
+                    });
+                }
+            }
+            Event::Text(text) if code_block_depth > 0 => {
+                if let Some(block) = current_code_block.as_mut() {
+                    block.text.push_str(&text);
+                }
+            }
+            Event::End(TagEnd::CodeBlock) => {
+                code_block_depth = code_block_depth.saturating_sub(1);
+                if let Some(mut block) = current_code_block.take() {
+                    block.bytes.end = range.end;
+                    typed_code_blocks.push(block);
+                }
+            }
             Event::Start(Tag::Heading { level, .. }) => {
                 current_heading = Some(Heading {
                     level: heading_level(level),
@@ -166,6 +189,7 @@ pub fn parse_document(
         source,
         prose,
         code_spans,
+        typed_code_blocks,
         headings,
         links,
         directives,
@@ -231,6 +255,157 @@ impl Document {
             }
         }
         scopes
+    }
+
+    /// Recognize TypeDoc method/function sections only when a TS signature and
+    /// a local source-path label accompany them. Link destinations are never fetched.
+    pub fn typedoc_scopes(&self) -> Vec<BindingScope> {
+        let method = Regex::new(r"^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\(\)$").unwrap();
+        let function =
+            Regex::new(r"^\s*(?:declare\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*(?:<|\()")
+                .unwrap();
+        let mut scopes = Vec::new();
+        for (index, heading) in self.headings.iter().enumerate() {
+            let Some(name) = method.captures(&heading.text).map(|c| c[1].to_string()) else {
+                continue;
+            };
+            let end = self
+                .headings
+                .iter()
+                .skip(index + 1)
+                .find(|h| h.level <= heading.level)
+                .map_or(self.source.len(), |h| h.bytes.start);
+            let preamble_end = self
+                .headings
+                .get(index + 1)
+                .map_or(end, |h| h.bytes.start)
+                .min(end);
+            let Some(block) = self
+                .typed_code_blocks
+                .iter()
+                .find(|b| b.bytes.start >= heading.bytes.end && b.bytes.end <= preamble_end)
+            else {
+                continue;
+            };
+            // Reject examples or signatures naming a different callable.
+            let signature_name =
+                Regex::new(&format!(r"^\s*{}\s*(?:<|\()", regex::escape(&name))).unwrap();
+            if !signature_name.is_match(&block.text) {
+                continue;
+            }
+            if let Some(found) = self.typedoc_source(block.bytes.end..preamble_end) {
+                scopes.push(BindingScope {
+                    directive: BindingDirective {
+                        adapter: Some("typescript".into()),
+                        path: Some(found),
+                        symbol: Some(name),
+                        bytes: heading.bytes.clone(),
+                        error: None,
+                    },
+                    bytes: heading.bytes.start..end,
+                    heading_level: heading.level,
+                });
+            }
+        }
+        if scopes.is_empty()
+            && let Some(block) = self.typed_code_blocks.first()
+            && let Some(name) = function.captures(&block.text).map(|c| c[1].to_string())
+        {
+            let end = self
+                .headings
+                .iter()
+                .find(|h| h.bytes.start >= block.bytes.end)
+                .map_or(self.source.len(), |h| h.bytes.start);
+            if let Some(found) = self.typedoc_source(block.bytes.end..end) {
+                scopes.push(BindingScope {
+                    directive: BindingDirective {
+                        adapter: Some("typescript".into()),
+                        path: Some(found),
+                        symbol: Some(name),
+                        bytes: block.bytes.clone(),
+                        error: None,
+                    },
+                    bytes: block.bytes.start..self.source.len(),
+                    heading_level: 0,
+                });
+            }
+        }
+        scopes
+    }
+
+    fn typedoc_source(&self, bytes: Range<usize>) -> Option<String> {
+        let pattern =
+            Regex::new(r"(?m)^Defined in: \[([^]\r\n]+\.(?:ts|tsx|js|jsx)):[0-9]+\]\(").unwrap();
+        pattern
+            .captures_iter(&self.source[bytes.clone()])
+            .find_map(|found| {
+                let matched = found.get(0).unwrap();
+                self.links
+                    .iter()
+                    .any(|link| {
+                        link.bytes.start >= bytes.start + matched.start()
+                            && link.bytes.start < bytes.start + matched.end()
+                    })
+                    .then(|| found[1].to_string())
+            })
+    }
+
+    pub fn typedoc_claims(&self, scope: &BindingScope) -> ReferenceClaims {
+        let mut claims = ReferenceClaims::default();
+        for (index, heading) in self.headings.iter().enumerate() {
+            if heading.bytes.start < scope.bytes.start
+                || heading.bytes.end > scope.bytes.end
+                || heading.level <= scope.heading_level
+            {
+                continue;
+            }
+            let end = self
+                .headings
+                .iter()
+                .skip(index + 1)
+                .find(|h| h.level <= heading.level)
+                .map_or(scope.bytes.end, |h| h.bytes.start)
+                .min(scope.bytes.end);
+            if heading.text.eq_ignore_ascii_case("returns") {
+                claims.return_type = typedoc_type(&self.source, heading.bytes.end..end);
+            } else if heading.text.eq_ignore_ascii_case("parameters") {
+                for (parameter_index, parameter) in self
+                    .headings
+                    .iter()
+                    .enumerate()
+                    .skip(index + 1)
+                    .take_while(|(_, h)| h.bytes.start < end)
+                {
+                    if parameter.level != heading.level + 1 {
+                        continue;
+                    }
+                    let name = parameter
+                        .text
+                        .trim()
+                        .trim_end_matches('?')
+                        .trim_start_matches("...");
+                    if name.is_empty()
+                        || !name
+                            .chars()
+                            .all(|c| c.is_alphanumeric() || c == '_' || c == '$')
+                    {
+                        continue;
+                    }
+                    let parameter_end = self
+                        .headings
+                        .get(parameter_index + 1)
+                        .map_or(end, |h| h.bytes.start)
+                        .min(end);
+                    claims.parameters.push(DocumentedParameter {
+                        name: name.into(),
+                        type_name: typedoc_type(&self.source, parameter.bytes.end..parameter_end)
+                            .map(|t| t.value),
+                        bytes: parameter.bytes.clone(),
+                    });
+                }
+            }
+        }
+        claims
     }
 
     pub fn reference_claims(&self, scope: &BindingScope) -> ReferenceClaims {
@@ -331,6 +506,47 @@ impl Document {
         }
         claims
     }
+}
+
+// Render only the first type paragraph, preserving generic punctuation and
+// stripping Markdown links/emphasis. Defaults are not part of a parameter type.
+fn typedoc_type(source: &str, bytes: Range<usize>) -> Option<DocumentedValue> {
+    let mut text = String::new();
+    let mut has_code = false;
+    let mut active = false;
+    let mut start = bytes.start;
+    let mut end = bytes.start;
+    for (event, range) in Parser::new(&source[bytes.clone()]).into_offset_iter() {
+        match event {
+            Event::Start(Tag::Paragraph) => {
+                active = true;
+                start = bytes.start + range.start;
+            }
+            Event::End(TagEnd::Paragraph) => {
+                end = bytes.start + range.end;
+                break;
+            }
+            Event::Code(value) if active => {
+                has_code = true;
+                text.push_str(&value);
+            }
+            Event::Text(value) if active => {
+                if let Some((value, _)) = value.split_once(" = ") {
+                    text.push_str(value);
+                    end = bytes.start + range.start;
+                    break;
+                }
+                text.push_str(&value);
+            }
+            Event::SoftBreak if active => text.push(' '),
+            Event::Start(Tag::CodeBlock(_) | Tag::Heading { .. }) => return None,
+            _ => {}
+        }
+    }
+    (has_code && !text.trim().is_empty()).then(|| DocumentedValue {
+        value: text.trim().trim_start_matches('|').trim().into(),
+        bytes: start..end.max(start),
+    })
 }
 
 fn parse_directives(html: &str, base: usize) -> Vec<BindingDirective> {
@@ -462,6 +678,104 @@ Logs in.
         assert_eq!(claims.parameters[0].type_name.as_deref(), Some("string"));
         assert_eq!(claims.return_type.unwrap().value, "Promise<User>");
         assert_eq!(claims.errors[0].value, "LoginError");
+    }
+
+    #[test]
+    fn typedoc_methods_preserve_linked_types_defaults_and_scope() {
+        let source = r#"# Client
+
+### load()
+
+```ts
+load<T>(key?, options?): Promise<T>;
+```
+
+Defined in: [src/client.ts:10](https://example.test/blob/main/src/client.ts#L10)
+
+#### Parameters
+
+##### key?
+
+`string`
+
+##### options?
+
+[`Options`](./Options.md)\<`T`\> = `{}`
+
+#### Returns
+
+`Promise`\<`T`\>
+
+### next()
+
+```ts
+next(): boolean;
+```
+
+Defined in: [src/client.ts:20](https://example.test/blob/main/src/client.ts#L20)
+
+#### Returns
+
+`boolean`
+"#;
+        let document = parse_document(
+            "/tmp/api.md",
+            "api.md",
+            DocumentProfile::Reference,
+            source.into(),
+        );
+        let scopes = document.typedoc_scopes();
+        assert_eq!(scopes.len(), 2);
+        assert_eq!(scopes[0].directive.symbol.as_deref(), Some("load"));
+        assert_eq!(scopes[0].directive.path.as_deref(), Some("src/client.ts"));
+        let claims = document.typedoc_claims(&scopes[0]);
+        assert_eq!(claims.parameters.len(), 2);
+        assert_eq!(claims.parameters[0].name, "key");
+        assert_eq!(
+            claims.parameters[1].type_name.as_deref(),
+            Some("Options<T>")
+        );
+        let returned = claims.return_type.unwrap();
+        assert_eq!(returned.value, "Promise<T>");
+        assert_eq!(&document.source[returned.bytes], "`Promise`\\<`T`\\>\n");
+        assert_eq!(
+            document
+                .typedoc_claims(&scopes[1])
+                .return_type
+                .unwrap()
+                .value,
+            "boolean"
+        );
+    }
+
+    #[test]
+    fn typedoc_function_requires_a_real_source_link_and_accepts_leading_union() {
+        let source = "```typescript\nfunction fetch(): string | undefined;\n```\n\nDefined in: [src/a.ts:1](https://example.test/a)\n\n## Returns\n\n| `string` | `undefined`\n";
+        let document = parse_document(
+            "/tmp/api.md",
+            "api.md",
+            DocumentProfile::Reference,
+            source.into(),
+        );
+        let scopes = document.typedoc_scopes();
+        assert_eq!(scopes.len(), 1);
+        assert_eq!(
+            document
+                .typedoc_claims(&scopes[0])
+                .return_type
+                .unwrap()
+                .value,
+            "string | undefined"
+        );
+        let fake = source.replace(
+            "Defined in: [src/a.ts:1](https://example.test/a)",
+            "```text\nDefined in: [src/a.ts:1](https://example.test/a)\n```",
+        );
+        assert!(
+            parse_document("/tmp/api.md", "api.md", DocumentProfile::Reference, fake)
+                .typedoc_scopes()
+                .is_empty()
+        );
     }
 
     #[test]

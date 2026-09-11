@@ -49,21 +49,402 @@
       "exitCode": 0,
       "summary": {
         "errors": 0,
-        "warnings": 1,
+        "warnings": 30,
         "info": 0,
         "documents": 1
       },
       "verification": {
-        "verifiedStructuralClaims": 0,
+        "verifiedStructuralClaims": 78,
         "contradictedStructuralClaims": 0,
-        "unverifiedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 30,
         "freeFormProseEvaluated": false
       },
       "diagnostics": [
         {
-          "ruleId": "VDOC-G010",
-          "message": "No structural claims were checked in this reference document; its API documentation has not been verified.",
-          "line": 1
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 74
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 191
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 197
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 233
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 275
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 321
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 367
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 394
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 419
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `mutationKey` is not precise enough to compare.",
+          "line": 447
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 453
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 499
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 525
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `queryKey` is not precise enough to compare.",
+          "line": 597
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 603
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 710
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 754
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 900
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 942
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 1013
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 1057
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 1099
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 1135
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 1168
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 1194
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `mutationKey` is not precise enough to compare.",
+          "line": 1253
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 1257
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 1319
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `queryKey` is not precise enough to compare.",
+          "line": 1433
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 1437
+        }
+      ]
+    },
+    "upstreamDehydrateReference": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 3,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 2,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 3,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `client` is not precise enough to compare.",
+          "line": 20
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 24
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 30
+        }
+      ]
+    },
+    "upstreamHydrateReference": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 3,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 4,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 3,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `client` is not precise enough to compare.",
+          "line": 25
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `dehydratedState` is not precise enough to compare.",
+          "line": 29
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 33
+        }
+      ]
+    },
+    "mutatedNativeReference": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 1,
+        "warnings": 30,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 77,
+        "contradictedStructuralClaims": 1,
+        "unverifiedStructuralClaims": 30,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 74
+        },
+        {
+          "ruleId": "VDOC-G006",
+          "message": "Return type is documented as `string` but the source type is `void`.",
+          "line": 106
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 191
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 197
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 233
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 275
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 321
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 367
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 394
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 419
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `mutationKey` is not precise enough to compare.",
+          "line": 447
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 453
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 499
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 525
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `queryKey` is not precise enough to compare.",
+          "line": 597
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 603
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 710
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 754
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 900
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 942
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 1013
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 1057
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 1099
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `filters` is not precise enough to compare.",
+          "line": 1135
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 1168
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 1194
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `mutationKey` is not precise enough to compare.",
+          "line": 1253
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 1257
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "line": 1319
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `queryKey` is not precise enough to compare.",
+          "line": 1433
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `options` is not precise enough to compare.",
+          "line": 1437
         }
       ]
     },

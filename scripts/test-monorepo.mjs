@@ -68,9 +68,28 @@ try {
   check('upstreamPersistenceGuide', 'docs/framework/react/plugins/persistQueryClient.md', 'guide', 0);
   // Also measure native reference coverage without adding bindings to upstream docs.
   const nativeReference = check('upstreamQueryClientReference', 'docs/framework/react/reference/classes/QueryClient.md', 'reference', 0);
-  assert.equal(nativeReference.verification.verifiedStructuralClaims, 0);
-  assert.equal(nativeReference.summary.warnings, 1);
-  assert.ok(nativeReference.diagnostics.some((d) => d.ruleId === 'VDOC-G010'));
+  assert.ok(nativeReference.verification.verifiedStructuralClaims === 78);
+  assert.equal(nativeReference.verification.contradictedStructuralClaims, 0);
+  assert.ok(nativeReference.verification.unverifiedStructuralClaims > 0);
+  assert.ok(nativeReference.diagnostics.every((d) => d.ruleId !== 'VDOC-G010'));
+  const dehydrate = check('upstreamDehydrateReference', 'docs/framework/react/reference/functions/dehydrate.md', 'reference', 0);
+  assert.equal(dehydrate.verification.verifiedStructuralClaims, 2);
+  assert.equal(dehydrate.verification.unverifiedStructuralClaims, 3);
+  const hydrate = check('upstreamHydrateReference', 'docs/framework/react/reference/functions/hydrate.md', 'reference', 0);
+  assert.equal(hydrate.verification.verifiedStructuralClaims, 4);
+  assert.equal(hydrate.verification.unverifiedStructuralClaims, 3);
+  const original = fs.readFileSync(path.join(checkout, 'docs/framework/react/reference/classes/QueryClient.md'), 'utf8');
+  const clearStart = original.indexOf('### clear()');
+  const clearEnd = original.indexOf('\n### ', clearStart + 1);
+  assert.ok(clearStart >= 0 && clearEnd > clearStart);
+  const clearSection = original.slice(clearStart, clearEnd);
+  const wrongSection = clearSection.replace('#### Returns\n\n`void`', '#### Returns\n\n`string`');
+  assert.notEqual(wrongSection, clearSection);
+  const mutated = write('native-invalid.md', original.slice(0, clearStart) + wrongSection + original.slice(clearEnd));
+  const mutatedReport = check('mutatedNativeReference', mutated, 'reference', 1);
+  assert.equal(mutatedReport.summary.errors, 1);
+  assert.equal(mutatedReport.verification.contradictedStructuralClaims, 1);
+  assert.ok(mutatedReport.diagnostics.some((d) => d.ruleId === 'VDOC-G006' && d.message.includes('`string`') && d.message.includes('`void`')));
   const valid = write('valid.md', '# Reference\n\n' + reference('QueryClient.clear', source('queryClient'), '## Returns\n\n`void`') + '\n' +
     reference('Subscribable.hasListeners', source('subscribable'), '## Returns\n\n`boolean`'));
   const clean = check('validReference', valid, 'reference', 0);

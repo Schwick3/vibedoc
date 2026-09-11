@@ -1,7 +1,7 @@
 # Real-project evaluation: TanStack Query
 
 Re-evaluated September 11, 2026 using Vibedoc 0.1.2 with the monorepo correctness
-changes, explicit zero-coverage warnings, and the pinned TypeScript 6.0.3 compiler.
+changes, TypeDoc Markdown support, and the pinned TypeScript 6.0.3 compiler.
 
 Upstream: [TanStack/query](https://github.com/TanStack/query), revision
 [`7452ef68a2901fc9a5673a8e5f53185a506b182f`](https://github.com/TanStack/query/tree/7452ef68a2901fc9a5673a8e5f53185a506b182f).
@@ -45,7 +45,10 @@ diagnostics are surfaced as adapter warnings.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Original QueryClient page, guide | 0 | 0 | 0 | 0 | 0 |
 | Original persistence page, guide | 0 | 2 | 0 | 0 | 0 |
-| Original QueryClient page, reference | 0 | 1 | 0 | 0 | 0 |
+| Original QueryClient page, reference | 0 | 30 | 78 | 0 | 30 |
+| Original dehydrate function page | 0 | 3 | 2 | 0 | 3 |
+| Original hydrate function page | 0 | 3 | 4 | 0 | 3 |
+| Native QueryClient page with one seeded error | 1 | 30 | 77 | 1 | 30 |
 | Controlled correct references | 0 | 0 | 2 | 0 | 0 |
 | Controlled incorrect references | 2 | 0 | 0 | 2 | 0 |
 | Named dynamic return type | 0 | 1 | 2 | 0 | 1 |
@@ -55,14 +58,17 @@ The two persistence-page warnings identify sentences longer than the configured
 at those locations. They are style findings, not factual API defects. No false
 positive API contradictions were observed in these runs.
 
-The native QueryClient page exposes a coverage gap: ordinary method headings and
-fenced signatures do not match Vibedoc's binding syntax. Even the reference
-profile therefore verifies zero claims and now emits `VDOC-G010`, explicitly warning
-that the document has not been verified. Manual inspection of three upstream
-return claims (`clear(): void`, `isFetching(): number`, and
-`cancelQueries(): Promise<void>`) confirms agreement with source, but all three
-are outside the measured native verification coverage. Zero reported unverified
-claims here means no recognized claims, not complete verification.
+TypeDoc Markdown support now binds method headings and standalone function
+signatures through their repository-relative “Defined in” source labels.
+The unchanged QueryClient page verifies 78 structural claims; 30 remain unverified
+because of incomplete types or overloads. It produces no API contradictions.
+The native `dehydrate` and `hydrate` pages verify another six claims. Guide-profile
+behavior remains unchanged.
+
+A temporary copy of the native QueryClient page changes only the Returns section
+for `clear` from `void` to `string`. Vibedoc reports exactly one `VDOC-G006` error
+against the correct source method. This confirms that native Markdown is checked,
+not merely counted. The source checkout and original documentation are unchanged.
 
 Controlled documents explicitly bind `QueryClient.clear` and
 `Subscribable.hasListeners`. Their correct return types verify, and both seeded
@@ -72,10 +78,13 @@ dynamic nested evidence; its two parameter names still verify. This intentionall
 trades coverage for avoiding confident conclusions from incomplete types.
 
 These small, selected samples do not establish real-world precision or recall.
-The evidence supports the compiler fixes and identifies native documentation
-coverage as the next product gap. Explicit zero-coverage reporting now prevents a
-quiet pass, although the command still exits 0 unless `--deny-warnings` is used.
-TypeDoc-style ingestion remains future work.
+The supported format is deliberately bounded: method headings, standalone
+function pages, TypeScript signature blocks used to identify callables, “Defined
+in” links, parameter subheadings, and inline/linked return types. Constructors,
+properties, parameter tables, and arbitrary fenced examples are not checked by
+this parser. Signature blocks establish bindings; their parameter and return text
+is not independently compared in addition to the dedicated sections. Nonzero
+coverage is not evidence that every statement in a document was verified.
 
 Machine-readable results: [query-results.json](query-results.json).
 
@@ -93,6 +102,6 @@ npm run test:monorepo -- /tmp/vibedoc-query /tmp/query-results.json
 ```
 
 The script requires a clean tracked checkout at the pinned revision and removes
-its temporary evaluation files. All six CLI reports are validated against the
+its temporary evaluation files. All nine CLI reports are validated against the
 report schema. CI runs this evaluation and the pinned mitt evaluation in the
 `real-projects` job; ordinary unit tests remain offline.

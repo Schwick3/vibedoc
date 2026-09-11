@@ -116,6 +116,11 @@ their API documentation has not been verified. This is evaluated per document,
 so verified claims in one file cannot hide zero coverage in another. Fenced
 signatures alone do not count as structural claims. Guide documents are exempt.
 
+The reference profile accepts [TypeDoc-style Markdown](docs/rules.md#typedoc-markdown)
+with callable signatures, “Defined in” source links, Parameters subheadings, and
+Returns sections. Existing supported API pages can be checked without rewriting
+them into Vibedoc's list format.
+
 ## Commands
 
 ```text
