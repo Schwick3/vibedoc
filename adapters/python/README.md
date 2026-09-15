@@ -61,7 +61,7 @@ the CLI's default adapter for explicit reference paths remains TypeScript.
 - Missing annotations, string forward references, aliases, imported types,
   annotation expressions, and generator return types remain incomplete.
   Shadowing detection deliberately over-approximates across the file.
-- Unknown decorators, decorated/inherited classes, conditional definitions,
+- Unknown decorators, unsupported inheritance, decorated classes, conditional definitions,
   repeated definitions, and detected callable reassignment yield incomplete
   symbol evidence. Overloads never select the signature that happens to match.
   Dynamic monkey-patching across files is not analyzed.
@@ -84,6 +84,26 @@ python3 scripts/test-python-project.py /path/to/python-dotenv /tmp/python-result
 ```
 
 See the [pinned real-project evaluation](../../tests/evaluations/python-dotenv.md).
+
+## Local inheritance
+
+Directly declared methods can be checked on a module-level class whose single
+base resolves to an earlier, uniquely declared class in the same file. Chains
+may terminate at a class with no base or the unshadowed builtin object. Class
+and method confidence both reflect this resolution; inherited-only methods
+are not copied into subclasses.
+
+The entire file is checked before promoting confidence, so later assignment,
+import, deletion, or redeclaration of an ancestor keeps its descendants
+incomplete. Imported, nested, conditional, multiple, generic, expression-based,
+cyclic, or unresolved bases remain unsupported. Class decorators, keywords
+(including metaclasses), generic parameters, and ancestor subclass/attribute
+hooks (__init_subclass__, __getattribute__, __getattr__) also prevent promotion.
+
+Existing method-level checks still apply to decorators, overloads, duplicate
+definitions, and detected replacement. Imported annotations remain incomplete,
+even when a method's parameter names can now be checked. This verifies written
+source signatures, not runtime behavior or arbitrary dynamic monkey-patching.
 
 ## Handwritten class reference lists
 

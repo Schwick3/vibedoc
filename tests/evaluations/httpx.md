@@ -1,7 +1,7 @@
 # HTTPX Python reference evaluation
 
-Evaluated September 14, 2026 with Python class/member-return support added after
-Vibedoc commit 6133a3b5ca871a6c8736435a899c48d3a906f8e3, using Python 3.12.0.
+Evaluated September 14, 2026 with local single-inheritance confidence support added
+after Vibedoc commit d79c8589ee529619f9c241139f5e466d1a4453d7, using Python 3.12.0.
 
 Source: [encode/httpx](https://github.com/encode/httpx), pinned at
 [b5addb64f0161ff6bfe94c124ef76f6a1fba5254](https://github.com/encode/httpx/tree/b5addb64f0161ff6bfe94c124ef76f6a1fba5254).
@@ -28,7 +28,11 @@ not the generated website.
 | Explicit binding, wrong return | 0 | 1 | 0 | 1 |
 | Controlled request reference | 18 | 0 | 13 | 0 |
 | Controlled request, wrong parameter | 16 | 1 | 13 | 1 |
-| Controlled Client.get reference | 0 | 0 | 9 | 0 |
+| Before inheritance support: Client.get | 0 | 0 | 9 | 0 |
+| Controlled Client.get reference | 8 | 0 | 9 | 0 |
+| Client.get, wrong parameter | 7 | 1 | 8 | 1 |
+| Controlled Client.close return | 1 | 0 | 0 | 0 |
+| Client.close, wrong return | 0 | 1 | 0 | 1 |
 
 Before support, the unchanged page produced eight VDOC-G009 errors for real
 source classes the adapter did not emit, plus VDOC-G010 and one language warning.
@@ -58,9 +62,20 @@ produces VDOC-G003 and a missing-parameter warning while unresolved types
 continue to abstain.
 
 Client.get is directly declared on Client, which inherits from BaseClient.
-The prototype still marks methods on classes with bases incomplete. Consequently
-all eight documented parameters and the return claim abstain before type
-comparison. This is separate from alias resolution.
+Both classes are declared in the same module, and their base chain passes the
+new conservative checks. The eight documented parameter names now verify;
+all eight parameter types and the return type remain unverified. No imported
+annotation resolution was added.
+
+Renaming url to missing produces VDOC-G003 with the exact Client.get declaration
+as evidence. The missing source parameter also produces VDOC-G004. Its unmatched
+documented type is not compared, leaving eight unverified type claims.
+Client.close separately verifies its None return annotation and rejects a
+deliberately documented str return with VDOC-G006 and the exact source location.
+
+Native API coverage is unchanged at four verified and fourteen unverified claims.
+This milestone changes source confidence, not generator directives or Markdown
+recognition. The existing python-dotenv evaluation also retains its counts.
 
 Native rows referring to absent or incomplete members remain unverified.
 For example, Response.next and Response.anext have no matching direct method
@@ -78,10 +93,14 @@ Handwritten rows check return types only. Their parameter text is not verified.
 Constructors, properties, and generator directives remain outside this subset.
 Class headings alone do not count as verified claims.
 
-Next evaluate narrower confidence rules for directly declared methods on
-subclasses, then conservative imported-type/alias resolution. Keep these
-separate: removing broad abstention without accounting for decorators,
-metaclasses, and name resolution could introduce false confidence.
+Supported inheritance is limited to unambiguous, earlier module-level bases
+within one source file, ending at no base or unshadowed builtin object.
+Unknown ancestry, class decorators, metaclasses, ancestor hooks, rebinding,
+and method-level uncertainty continue to abstain. Inherited-only methods are
+not synthesized.
+
+Imported-type and alias resolution is the next separate milestone. Cross-file
+inheritance and additional documentation formats remain out of scope.
 
 ## Reproduce
 

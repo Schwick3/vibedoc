@@ -57,9 +57,79 @@ def type_fact(annotation, shadowed):
             "confidence": "exact" if annotation and "*" not in shadowed and supported(annotation) else "incomplete"}
 
 
+def rebound_names(tree):
+    # Preserve the adapter's conservative, file-wide replacement detection.
+    names = {n.id for n in ast.walk(tree)
+             if isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del))}
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            names.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.Attribute) and isinstance(node.ctx, (ast.Store, ast.Del)):
+            names.add(node.attr)
+        elif isinstance(node, ast.ExceptHandler) and node.name:
+            names.add(node.name)
+        elif isinstance(node, (ast.MatchAs, ast.MatchStar)) and node.name:
+            names.add(node.name)
+        elif isinstance(node, ast.MatchMapping) and node.rest:
+            names.add(node.rest)
+    return names
+
+
+def class_confidence(tree, shadowed, assigned):
+    """Resolve only earlier, unique module-level classes; never evaluate bases."""
+    classes = {node.name: node for node in tree.body if isinstance(node, ast.ClassDef)}
+    declarations = {}
+    for node in ast.walk(tree):
+        if isinstance(node, (*FUNCTIONS, ast.ClassDef)):
+            declarations[node.name] = declarations.get(node.name, 0) + 1
+    hooks = {"__init_subclass__", "__getattribute__", "__getattr__"}
+    cache = {}
+
+    def has_hooks(node):
+        return any(
+            isinstance(item, FUNCTIONS) and item.name in hooks
+            or isinstance(item, ast.Name) and isinstance(item.ctx, (ast.Store, ast.Del)) and item.id in hooks
+            for statement in node.body for item in ast.walk(statement)
+        ) or bool(hooks & assigned)
+
+    def safe(node, active=frozenset()):
+        if node in cache:
+            return cache[node]
+        if node in active:
+            return False
+        if (node.decorator_list or node.keywords or getattr(node, "type_params", [])
+                or "*" in assigned or node.name in assigned
+                or declarations.get(node.name) != 1):
+            return False
+        if not node.bases:
+            return True
+        if classes.get(node.name) is not node or len(node.bases) != 1 or has_hooks(node):
+            return False
+        base = node.bases[0]
+        if not isinstance(base, ast.Name):
+            return False
+        if base.id == "object":
+            return base.id not in shadowed and base.id not in assigned
+        parent = classes.get(base.id)
+        if parent is None or parent.end_lineno >= node.lineno or has_hooks(parent):
+            return False
+        cache[node] = safe(parent, active | {node})
+        return cache[node]
+
+    # Resolve inheritance before emission. For classes without bases, preserve
+    # the existing scope-aware checks in visit() and final rebinding validation.
+    return {
+        node: safe(node) if node.bases else not (
+            node.decorator_list or node.keywords or getattr(node, "type_params", []))
+        for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+    }
+
+
 def analyze_file(path, text):
     tree = ast.parse(text, filename=path)
     shadowed = bindings(tree)
+    assigned = rebound_names(tree)
+    class_safe = class_confidence(tree, shadowed, assigned)
     symbols = {}
     definitions = {}
 
@@ -75,10 +145,10 @@ def analyze_file(path, text):
                     "language": "python", "name": node.name, "qualifiedName": qualified,
                     "kind": "class", "exported": not any(p.startswith("_") for p in qualified.split(".")),
                     "declaration": location(path, node), "signatures": [], "throws": [],
-                    "confidence": "incomplete" if uncertain or node.decorator_list or node.bases or node.keywords or getattr(node, "type_params", []) else "exact",
+                    "confidence": "incomplete" if uncertain or not class_safe[node] else "exact",
                 }
                 visit(node.body, prefix + node.name + ".",
-                      uncertain or bool(node.decorator_list or node.bases or node.keywords or getattr(node, "type_params", [])),
+                      uncertain or not class_safe[node],
                       True)
             elif isinstance(node, FUNCTIONS):
                 qualified = prefix + node.name
@@ -130,14 +200,6 @@ def analyze_file(path, text):
                         visit(value, prefix, True, in_class)
 
     visit(tree.body)
-    # Assignments can replace a declared callable after its definition.
-    assigned = {n.id for n in ast.walk(tree)
-                if isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del))}
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.Import, ast.ImportFrom)):
-            assigned.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
-        elif isinstance(node, ast.Attribute) and isinstance(node.ctx, (ast.Store, ast.Del)):
-            assigned.add(node.attr)
     for symbol in symbols.values():
         parts = symbol["qualifiedName"].split(".")
         repeated = any(definitions.get(".".join(parts[:i]), 0) > 1

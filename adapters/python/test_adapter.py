@@ -42,11 +42,120 @@ def wrapped(value: int) -> int: return value
 class Derived(Client):
     def send(self, body: str) -> bool: return True
 """)}
-        for name in ("Client.send", "Client.open", "Client.parse"):
+        for name in ("Client.send", "Client.open", "Client.parse", "Derived.send"):
             self.assertEqual(len(facts[name]["signatures"][0]["parameters"]), 1)
             self.assertEqual(facts[name]["confidence"], "exact")
-        for name in ("Client.value", "wrapped", "Derived.send"):
+        for name in ("Client.value", "wrapped"):
             self.assertEqual(facts[name]["confidence"], "incomplete")
+
+    def test_local_inheritance_chain_and_receivers(self):
+        facts = {s["qualifiedName"]: s for s in self.facts("""
+class Base(object):
+    def inherited(self) -> bool: return True
+class Middle(Base):
+    def direct(self, value: int) -> int: return value
+class Child(Middle):
+    async def fetch(self, key: str) -> str: return key
+    @classmethod
+    def create(cls, key: str) -> str: return key
+    @staticmethod
+    def parse(value: str) -> str: return value
+""")}
+        for name in ("Base", "Middle", "Child", "Middle.direct", "Child.fetch", "Child.create", "Child.parse"):
+            self.assertEqual(facts[name]["confidence"], "exact")
+        for name in ("Child.fetch", "Child.create", "Child.parse"):
+            self.assertEqual(len(facts[name]["signatures"][0]["parameters"]), 1)
+        self.assertNotIn("Child.inherited", facts)
+        self.assertNotIn("Child.direct", facts)
+
+    def test_unrelated_nested_class_names_keep_existing_confidence(self):
+        facts = {s["qualifiedName"]: s for s in self.facts("""
+class First:
+    class Nested:
+        def read(self) -> bytes: return b""
+class Second:
+    class Nested:
+        def read(self) -> bytes: return b""
+""")}
+        for name in ("First.Nested", "First.Nested.read", "Second.Nested", "Second.Nested.read"):
+            self.assertEqual(facts[name]["confidence"], "exact")
+
+    def test_unsupported_base_forms_propagate(self):
+        cases = {
+            "import": "from external import Base",
+            "conditional": "if enabled:\n    class Base: pass",
+            "duplicate": "class Base: pass\nclass Base: pass",
+            "rebound": "class Base: pass\nBase = other",
+            "nested": "class Outer:\n    class Base: pass",
+            "unresolved": "",
+            "decorated": "@decorate\nclass Base: pass",
+            "metaclass": "class Base(metaclass=Meta): pass",
+            "keyword": "class Base(option=True): pass",
+            "late": "",
+            "cycle": "class Base(Other): pass\nclass Other(Base): pass",
+        }
+        for label, prefix in cases.items():
+            with self.subTest(label=label):
+                source = prefix + "\nclass Child(Base):\n    def read(self) -> bytes: return b''\nclass Leaf(Child):\n    def read(self) -> bytes: return b''"
+                if label == "late":
+                    source += "\nclass Base: pass"
+                facts = {s["qualifiedName"]: s for s in self.facts(source)}
+                for name in ("Child", "Child.read", "Leaf", "Leaf.read"):
+                    self.assertEqual(facts[name]["confidence"], "incomplete")
+        for base in ("Base, Other", "Base[int]", "module.Base", "factory()", "Outer.Base"):
+            with self.subTest(base=base):
+                facts = {s["qualifiedName"]: s for s in self.facts(
+                    "class Base: pass\nclass Other: pass\nclass Outer:\n    class Base: pass\n"
+                    + f"class Child({base}):\n    def read(self) -> bytes: return b''")}
+                self.assertEqual(facts["Child.read"]["confidence"], "incomplete")
+
+    def test_shadowed_object_and_nested_subclasses(self):
+        for binding in ("object = other", "from external import object", "class object: pass", "from external import *"):
+            facts = {s["qualifiedName"]: s for s in self.facts(
+                binding + "\nclass Child(object):\n    def read(self) -> bytes: return b''")}
+            self.assertEqual(facts["Child.read"]["confidence"], "incomplete")
+        facts = {s["qualifiedName"]: s for s in self.facts(
+            "class Base: pass\nclass Outer:\n    class Child(Base):\n        def read(self) -> bytes: return b''")}
+        self.assertEqual(facts["Outer.Child.read"]["confidence"], "incomplete")
+
+    def test_ancestor_hooks_and_late_rebinding(self):
+        for hook in ("__init_subclass__", "__getattribute__", "__getattr__"):
+            for body in (f"def {hook}(self): pass", f"{hook} = replacement"):
+                with self.subTest(hook=hook, body=body):
+                    facts = {s["qualifiedName"]: s for s in self.facts(
+                        f"class Base:\n    {body}\nclass Middle(Base): pass\nclass Child(Middle):\n    def read(self) -> bytes: return b''")}
+                    self.assertEqual(facts["Child.read"]["confidence"], "incomplete")
+        for tail in ("Base = other", "del Base", "from external import Base", "class Base: pass",
+                     "Base.__init_subclass__ = replacement", "match value:\n    case Base: pass"):
+            with self.subTest(tail=tail):
+                facts = {s["qualifiedName"]: s for s in self.facts(
+                    "class Base: pass\nclass Child(Base):\n    def read(self) -> bytes: return b''\n" + tail)}
+                self.assertEqual(facts["Child"]["confidence"], "incomplete")
+                self.assertEqual(facts["Child.read"]["confidence"], "incomplete")
+
+    @unittest.skipUnless(hasattr(__import__("ast"), "TypeVar"), "Python 3.12 generic syntax")
+    def test_generic_ancestors_remain_incomplete(self):
+        facts = {s["qualifiedName"]: s for s in self.facts(
+            "class Base[T]: pass\nclass Child(Base):\n    def read(self) -> bytes: return b''")}
+        self.assertEqual(facts["Child.read"]["confidence"], "incomplete")
+
+    def test_method_uncertainty_is_preserved_on_supported_subclasses(self):
+        facts = {s["qualifiedName"]: s for s in self.facts("""
+class Base: pass
+class Child(Base):
+    @unknown
+    def wrapped(self) -> int: return 1
+    @property
+    def value(self) -> int: return 1
+    @overload
+    def repeated(self, a: int) -> int: ...
+    def repeated(self, a: str) -> str: return a
+    def replaced(self) -> int: return 1
+Child.replaced = replacement
+""")}
+        self.assertEqual(facts["Child"]["confidence"], "exact")
+        for name in ("wrapped", "value", "repeated", "replaced"):
+            self.assertEqual(facts["Child." + name]["confidence"], "incomplete")
 
     def test_uncertain_annotations_and_shadowing(self):
         for annotation in ('"User"', "Alias", "typing.Any", "Optional[int]", "(int, str)", "list[int, str]", "int"):
@@ -140,7 +249,8 @@ adapters = ["python"]
 [adapters.python]
 sources = ["*.py"]
 """)
-            (root / "api.py").write_text("""class Response:
+            (root / "api.py").write_text("""class Base: pass
+class Response(Base):
     def read(self) -> bytes: return b""
     def take(self, key: int) -> bytes: return b""
 class Other:
@@ -175,6 +285,19 @@ class Other:
             wrong = check(source.replace("**bytes**", "**str**", 1))
             self.assertEqual(wrong["verification"]["contradictedStructuralClaims"], 1)
             self.assertEqual(wrong["diagnostics"][0]["evidence"][0]["path"], "api.py")
+
+            method_doc = """<!-- vibedoc:source adapter="python" path="api.py" symbol="Response.take" -->
+# Take
+## Parameters
+- §key§: §int§
+## Returns
+- §bytes§
+""".replace("§", chr(96))
+            self.assertEqual(check(method_doc)["verification"]["verifiedStructuralClaims"], 3)
+            wrong_parameter = check(method_doc.replace(chr(96) + "key" + chr(96), chr(96) + "missing" + chr(96)))
+            self.assertEqual(wrong_parameter["verification"]["contradictedStructuralClaims"], 1)
+            parameter_error = next(d for d in wrong_parameter["diagnostics"] if d["ruleId"] == "VDOC-G003")
+            self.assertEqual(parameter_error["evidence"][0]["path"], "api.py")
 
             (root / "other.py").write_text("class Response:\n    def read(self) -> str: return ''")
             ambiguous = check(source)

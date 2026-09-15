@@ -38,16 +38,16 @@ assert len(graph["files"]) == 23
 assert len(graph["symbols"]) == 515
 assert len({s["id"] for s in graph["symbols"]}) == 515
 symbols = {s["qualifiedName"]: s for s in graph["symbols"]}
-selected = {name: symbols[name] for name in ("request", "Response.read", "Client.get")}
+selected = {name: symbols[name] for name in ("request", "Response.read", "Client.get", "Client.close")}
 assert selected["Response.read"]["confidence"] == "exact"
 assert selected["Response.read"]["signatures"][0]["returnType"] == {
     "display": "bytes", "normalized": "bytes", "confidence": "exact"}
-assert selected["Client.get"]["confidence"] == "incomplete"
+assert selected["Client.get"]["confidence"] == "exact"
 native = (CHECKOUT / "docs/api.md").read_text()
 results = {
     "repository": "https://github.com/encode/httpx", "revision": REVISION,
     "vibedocBaseRevision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-    "implementation": "Python class symbols and handwritten member-return rows",
+    "implementation": "Same-file single-inheritance confidence for directly declared Python methods",
     "adapter": replies[0]["result"]["adapter"],
     "nativeDocument": {"path": "docs/api.md", "sha256": hashlib.sha256(native.encode()).hexdigest()},
     "facts": {"files": len(graph["files"]), "symbols": len(graph["symbols"]),
@@ -116,7 +116,20 @@ with tempfile.TemporaryDirectory(prefix=".vibedoc-httpx-", dir=CHECKOUT) as dire
         wrong = check("boundRequestWrongParameter", document, [16, 1, 13])
         assert any(d["ruleId"] == "VDOC-G003" for d in wrong["diagnostics"])
         document.write_text(reference(selected["Client.get"]))
-        check("boundSubclassMethod", document, [0, 0, 9])
+        check("boundSubclassMethod", document, [8, 0, 9])
+        document.write_text(reference(selected["Client.get"]).replace(f"{TICK}url{TICK}:", f"{TICK}missing{TICK}:"))
+        wrong = check("boundSubclassWrongParameter", document, [7, 1, 8])
+        error = next(d for d in wrong["diagnostics"] if d["ruleId"] == "VDOC-G003")
+        assert error["evidence"][0] == selected["Client.get"]["declaration"]
+        assert selected["Client.close"]["confidence"] == "exact"
+        assert selected["Client.close"]["signatures"][0]["returnType"] == {
+            "display": "None", "normalized": "None", "confidence": "exact"}
+        document.write_text(reference(selected["Client.close"]))
+        check("boundSubclassClose", document, [1, 0, 0])
+        document.write_text(reference(selected["Client.close"], "str"))
+        wrong = check("boundSubclassCloseWrongReturn", document, [0, 1, 0])
+        error = next(d for d in wrong["diagnostics"] if d["ruleId"] == "VDOC-G006")
+        assert error["evidence"][0] == selected["Client.close"]["declaration"]
     finally:
         if config.exists():
             config.unlink()
