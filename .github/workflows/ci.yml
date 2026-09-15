@@ -79,3 +79,10 @@ jobs:
           path: target/real-projects/python-dotenv
           persist-credentials: false
       - run: python3 scripts/test-python-project.py target/real-projects/python-dotenv
+      - uses: actions/checkout@v6
+        with:
+          repository: encode/httpx
+          ref: b5addb64f0161ff6bfe94c124ef76f6a1fba5254
+          path: target/real-projects/httpx
+          persist-credentials: false
+      - run: python3 scripts/test-httpx-project.py target/real-projects/httpx

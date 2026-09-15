@@ -102,9 +102,9 @@ def outer() -> int:
         for tail in ("read = other", "from other import read"):
             self.assertEqual(self.facts("def read() -> str: return ''\n" + tail)[0]["confidence"], "incomplete")
         facts = self.facts("class Client:\n    def read(self) -> str: return ''\nClient.read = other")
-        self.assertEqual(facts[0]["confidence"], "incomplete")
+        self.assertEqual(next(s for s in facts if s["qualifiedName"] == "Client.read")["confidence"], "incomplete")
         facts = self.facts("class Client:\n    def read(self) -> str: return ''\nclass Client: pass")
-        self.assertEqual(facts[0]["confidence"], "incomplete")
+        self.assertEqual(next(s for s in facts if s["qualifiedName"] == "Client.read")["confidence"], "incomplete")
 
     def test_cli_python_binding_in_workspace_with_tsconfig(self):
         binary = Path(__file__).resolve().parents[2] / "target/debug/vibedoc"
@@ -126,6 +126,68 @@ def outer() -> int:
                                   "--format", "json", "--adapter-command", f"python={command}"],
                                  cwd=root, capture_output=True, text=True, check=True)
             self.assertEqual(json.loads(run.stdout)["verification"]["verifiedStructuralClaims"], 3)
+
+    def test_native_class_member_returns_and_ambiguity(self):
+        binary = Path(__file__).resolve().parents[2] / "target/debug/vibedoc"
+        command = Path(__file__).resolve().parent / "bin/vibedoc-adapter-python"
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "vibedoc.toml").write_text("""version = 1
+[[documents]]
+include = ["api.md"]
+profile = "reference"
+adapters = ["python"]
+[adapters.python]
+sources = ["*.py"]
+""")
+            (root / "api.py").write_text("""class Response:
+    def read(self) -> bytes: return b""
+    def take(self, key: int) -> bytes: return b""
+class Other:
+    def read(self) -> str: return ""
+""")
+            source = """## §Response§
+
+* §def .read()§ - **bytes**
+* §def .take(key)§ - **bytes**
+* §.status§ - **int**
+* §def __init__(...)§ - **None**
+
+~~~md
+* §def .read()§ - **str**
+~~~
+
+> * §def .read()§ - **str**
+""".replace("§", chr(96))
+
+            def check(text):
+                (root / "api.md").write_text(text)
+                # Config discovery selects Python; no explicit path overrides.
+                run = subprocess.run([str(binary), "check", "--format", "json",
+                                      "--adapter-command", f"python={command}"],
+                                     cwd=root, capture_output=True, text=True)
+                self.assertIn(run.returncode, (0, 1), run.stderr)
+                return json.loads(run.stdout)
+
+            good = check(source)
+            self.assertEqual(good["verification"]["verifiedStructuralClaims"], 2)
+            self.assertEqual(good["diagnostics"], [])
+            wrong = check(source.replace("**bytes**", "**str**", 1))
+            self.assertEqual(wrong["verification"]["contradictedStructuralClaims"], 1)
+            self.assertEqual(wrong["diagnostics"][0]["evidence"][0]["path"], "api.py")
+
+            (root / "other.py").write_text("class Response:\n    def read(self) -> str: return ''")
+            ambiguous = check(source)
+            self.assertEqual(ambiguous["verification"]["verifiedStructuralClaims"], 0)
+            self.assertTrue(any(d["ruleId"] == "VDOC-G002" for d in ambiguous["diagnostics"]))
+            explicit = '<!-- vibedoc:source adapter="python" path="api.py" symbol="Response" -->\n'
+            self.assertEqual(check(explicit + source)["verification"]["verifiedStructuralClaims"], 2)
+            (root / "other.py").unlink()
+
+            (root / "api.py").write_text("class Response(Base):\n    def read(self) -> bytes: return b''")
+            uncertain = check(source)
+            self.assertEqual(uncertain["verification"]["verifiedStructuralClaims"], 0)
+            self.assertEqual(uncertain["verification"]["unverifiedStructuralClaims"], 2)
 
     def test_stdio_roundtrip_and_recovery(self):
         command = Path(__file__).parent / "bin/vibedoc-adapter-python"

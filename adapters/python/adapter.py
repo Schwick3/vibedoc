@@ -69,8 +69,16 @@ def analyze_file(path, text):
                 name = prefix + node.name
                 definitions[name] = definitions.get(name, 0) + 1
             if isinstance(node, ast.ClassDef):
+                qualified = prefix + node.name
+                symbols[qualified] = {
+                    "id": f"python:{path}#{qualified}", "adapter": "python",
+                    "language": "python", "name": node.name, "qualifiedName": qualified,
+                    "kind": "class", "exported": not any(p.startswith("_") for p in qualified.split(".")),
+                    "declaration": location(path, node), "signatures": [], "throws": [],
+                    "confidence": "incomplete" if uncertain or node.decorator_list or node.bases or node.keywords or getattr(node, "type_params", []) else "exact",
+                }
                 visit(node.body, prefix + node.name + ".",
-                      uncertain or bool(node.decorator_list or node.bases or node.keywords),
+                      uncertain or bool(node.decorator_list or node.bases or node.keywords or getattr(node, "type_params", [])),
                       True)
             elif isinstance(node, FUNCTIONS):
                 qualified = prefix + node.name

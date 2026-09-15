@@ -1,0 +1,1971 @@
+{
+  "repository": "https://github.com/encode/httpx",
+  "revision": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+  "vibedocBaseRevision": "6133a3b5ca871a6c8736435a899c48d3a906f8e3",
+  "implementation": "Python class symbols and handwritten member-return rows",
+  "adapter": {
+    "name": "python",
+    "version": "0.1.2",
+    "runtime": "python 3.12.0"
+  },
+  "nativeDocument": {
+    "path": "docs/api.md",
+    "sha256": "1a06eb7913abdafce110b6373e6c838b65c73b25113bbafdde68c224d0e95759"
+  },
+  "facts": {
+    "files": 23,
+    "symbols": 515,
+    "symbolConfidence": {
+      "exact": 192,
+      "incomplete": 323
+    },
+    "selected": {
+      "request": {
+        "id": "python:httpx/_api.py#request",
+        "adapter": "python",
+        "language": "python",
+        "name": "request",
+        "qualifiedName": "request",
+        "kind": "function",
+        "exported": true,
+        "declaration": {
+          "path": "httpx/_api.py",
+          "range": {
+            "start": {
+              "line": 39,
+              "column": 1
+            },
+            "end": {
+              "line": 120,
+              "column": 10
+            }
+          }
+        },
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "method",
+                "typeFact": {
+                  "display": "str",
+                  "normalized": "str",
+                  "confidence": "exact"
+                },
+                "optional": false,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 40,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 40,
+                      "column": 16
+                    }
+                  }
+                }
+              },
+              {
+                "name": "url",
+                "typeFact": {
+                  "display": "URL | str",
+                  "normalized": "URL | str",
+                  "confidence": "incomplete"
+                },
+                "optional": false,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 41,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 41,
+                      "column": 19
+                    }
+                  }
+                }
+              },
+              {
+                "name": "params",
+                "typeFact": {
+                  "display": "QueryParamTypes | None",
+                  "normalized": "QueryParamTypes | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 43,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 43,
+                      "column": 35
+                    }
+                  }
+                }
+              },
+              {
+                "name": "content",
+                "typeFact": {
+                  "display": "RequestContent | None",
+                  "normalized": "RequestContent | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 44,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 44,
+                      "column": 35
+                    }
+                  }
+                }
+              },
+              {
+                "name": "data",
+                "typeFact": {
+                  "display": "RequestData | None",
+                  "normalized": "RequestData | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 45,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 45,
+                      "column": 29
+                    }
+                  }
+                }
+              },
+              {
+                "name": "files",
+                "typeFact": {
+                  "display": "RequestFiles | None",
+                  "normalized": "RequestFiles | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 46,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 46,
+                      "column": 31
+                    }
+                  }
+                }
+              },
+              {
+                "name": "json",
+                "typeFact": {
+                  "display": "typing.Any | None",
+                  "normalized": "typing.Any | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 47,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 47,
+                      "column": 28
+                    }
+                  }
+                }
+              },
+              {
+                "name": "headers",
+                "typeFact": {
+                  "display": "HeaderTypes | None",
+                  "normalized": "HeaderTypes | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 48,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 48,
+                      "column": 32
+                    }
+                  }
+                }
+              },
+              {
+                "name": "cookies",
+                "typeFact": {
+                  "display": "CookieTypes | None",
+                  "normalized": "CookieTypes | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 49,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 49,
+                      "column": 32
+                    }
+                  }
+                }
+              },
+              {
+                "name": "auth",
+                "typeFact": {
+                  "display": "AuthTypes | None",
+                  "normalized": "AuthTypes | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 50,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 50,
+                      "column": 27
+                    }
+                  }
+                }
+              },
+              {
+                "name": "proxy",
+                "typeFact": {
+                  "display": "ProxyTypes | None",
+                  "normalized": "ProxyTypes | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 51,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 51,
+                      "column": 29
+                    }
+                  }
+                }
+              },
+              {
+                "name": "timeout",
+                "typeFact": {
+                  "display": "TimeoutTypes",
+                  "normalized": "TimeoutTypes",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 52,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 52,
+                      "column": 26
+                    }
+                  }
+                }
+              },
+              {
+                "name": "follow_redirects",
+                "typeFact": {
+                  "display": "bool",
+                  "normalized": "bool",
+                  "confidence": "exact"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 53,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 53,
+                      "column": 27
+                    }
+                  }
+                }
+              },
+              {
+                "name": "verify",
+                "typeFact": {
+                  "display": "ssl.SSLContext | str | bool",
+                  "normalized": "ssl.SSLContext | str | bool",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 54,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 54,
+                      "column": 40
+                    }
+                  }
+                }
+              },
+              {
+                "name": "trust_env",
+                "typeFact": {
+                  "display": "bool",
+                  "normalized": "bool",
+                  "confidence": "exact"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_api.py",
+                  "range": {
+                    "start": {
+                      "line": 55,
+                      "column": 5
+                    },
+                    "end": {
+                      "line": 55,
+                      "column": 20
+                    }
+                  }
+                }
+              }
+            ],
+            "returnType": {
+              "display": "Response",
+              "normalized": "Response",
+              "confidence": "incomplete"
+            },
+            "declaration": {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 39,
+                  "column": 1
+                },
+                "end": {
+                  "line": 120,
+                  "column": 10
+                }
+              }
+            }
+          }
+        ],
+        "throws": [],
+        "confidence": "exact"
+      },
+      "Response.read": {
+        "id": "python:httpx/_models.py#Response.read",
+        "adapter": "python",
+        "language": "python",
+        "name": "read",
+        "qualifiedName": "Response.read",
+        "kind": "method",
+        "exported": true,
+        "declaration": {
+          "path": "httpx/_models.py",
+          "range": {
+            "start": {
+              "line": 876,
+              "column": 5
+            },
+            "end": {
+              "line": 882,
+              "column": 29
+            }
+          }
+        },
+        "signatures": [
+          {
+            "parameters": [],
+            "returnType": {
+              "display": "bytes",
+              "normalized": "bytes",
+              "confidence": "exact"
+            },
+            "declaration": {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 876,
+                  "column": 5
+                },
+                "end": {
+                  "line": 882,
+                  "column": 29
+                }
+              }
+            }
+          }
+        ],
+        "throws": [],
+        "confidence": "exact"
+      },
+      "Client.get": {
+        "id": "python:httpx/_client.py#Client.get",
+        "adapter": "python",
+        "language": "python",
+        "name": "get",
+        "qualifiedName": "Client.get",
+        "kind": "method",
+        "exported": true,
+        "declaration": {
+          "path": "httpx/_client.py",
+          "range": {
+            "start": {
+              "line": 1036,
+              "column": 5
+            },
+            "end": {
+              "line": 1063,
+              "column": 10
+            }
+          }
+        },
+        "signatures": [
+          {
+            "parameters": [
+              {
+                "name": "url",
+                "typeFact": {
+                  "display": "URL | str",
+                  "normalized": "URL | str",
+                  "confidence": "incomplete"
+                },
+                "optional": false,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_client.py",
+                  "range": {
+                    "start": {
+                      "line": 1038,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 1038,
+                      "column": 23
+                    }
+                  }
+                }
+              },
+              {
+                "name": "params",
+                "typeFact": {
+                  "display": "QueryParamTypes | None",
+                  "normalized": "QueryParamTypes | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_client.py",
+                  "range": {
+                    "start": {
+                      "line": 1040,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 1040,
+                      "column": 39
+                    }
+                  }
+                }
+              },
+              {
+                "name": "headers",
+                "typeFact": {
+                  "display": "HeaderTypes | None",
+                  "normalized": "HeaderTypes | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_client.py",
+                  "range": {
+                    "start": {
+                      "line": 1041,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 1041,
+                      "column": 36
+                    }
+                  }
+                }
+              },
+              {
+                "name": "cookies",
+                "typeFact": {
+                  "display": "CookieTypes | None",
+                  "normalized": "CookieTypes | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_client.py",
+                  "range": {
+                    "start": {
+                      "line": 1042,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 1042,
+                      "column": 36
+                    }
+                  }
+                }
+              },
+              {
+                "name": "auth",
+                "typeFact": {
+                  "display": "AuthTypes | UseClientDefault | None",
+                  "normalized": "AuthTypes | UseClientDefault | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_client.py",
+                  "range": {
+                    "start": {
+                      "line": 1043,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 1043,
+                      "column": 50
+                    }
+                  }
+                }
+              },
+              {
+                "name": "follow_redirects",
+                "typeFact": {
+                  "display": "bool | UseClientDefault",
+                  "normalized": "bool | UseClientDefault",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_client.py",
+                  "range": {
+                    "start": {
+                      "line": 1044,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 1044,
+                      "column": 50
+                    }
+                  }
+                }
+              },
+              {
+                "name": "timeout",
+                "typeFact": {
+                  "display": "TimeoutTypes | UseClientDefault",
+                  "normalized": "TimeoutTypes | UseClientDefault",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_client.py",
+                  "range": {
+                    "start": {
+                      "line": 1045,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 1045,
+                      "column": 49
+                    }
+                  }
+                }
+              },
+              {
+                "name": "extensions",
+                "typeFact": {
+                  "display": "RequestExtensions | None",
+                  "normalized": "RequestExtensions | None",
+                  "confidence": "incomplete"
+                },
+                "optional": true,
+                "rest": false,
+                "destructured": false,
+                "location": {
+                  "path": "httpx/_client.py",
+                  "range": {
+                    "start": {
+                      "line": 1046,
+                      "column": 9
+                    },
+                    "end": {
+                      "line": 1046,
+                      "column": 45
+                    }
+                  }
+                }
+              }
+            ],
+            "returnType": {
+              "display": "Response",
+              "normalized": "Response",
+              "confidence": "incomplete"
+            },
+            "declaration": {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1036,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1063,
+                  "column": 10
+                }
+              }
+            }
+          }
+        ],
+        "throws": [],
+        "confidence": "incomplete"
+      }
+    }
+  },
+  "checks": {
+    "unchangedApi": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 15,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 4,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 14,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-L003",
+          "message": "Qualitative claim requires evidence: `efficient`.",
+          "evidence": []
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 794,
+                  "column": 5
+                },
+                "end": {
+                  "line": 829,
+                  "column": 71
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 831,
+                  "column": 5
+                },
+                "end": {
+                  "line": 832,
+                  "column": 53
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 935,
+                  "column": 5
+                },
+                "end": {
+                  "line": 959,
+                  "column": 21
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 884,
+                  "column": 5
+                },
+                "end": {
+                  "line": 905,
+                  "column": 32
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 907,
+                  "column": 5
+                },
+                "end": {
+                  "line": 924,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 926,
+                  "column": 5
+                },
+                "end": {
+                  "line": 933,
+                  "column": 27
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return claim for Response.next lacks an unambiguous, inspectable class/member binding.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 515,
+                  "column": 1
+                },
+                "end": {
+                  "line": 1076,
+                  "column": 43
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 1037,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1063,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 982,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1005,
+                  "column": 32
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 1007,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1026,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 1028,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1035,
+                  "column": 27
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return claim for Response.anext lacks an unambiguous, inspectable class/member binding.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 515,
+                  "column": 1
+                },
+                "end": {
+                  "line": 1076,
+                  "column": 43
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_urls.py",
+              "range": {
+                "start": {
+                  "line": 327,
+                  "column": 5
+                },
+                "end": {
+                  "line": 340,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return claim for Headers.copy lacks an unambiguous, inspectable class/member binding.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 139,
+                  "column": 1
+                },
+                "end": {
+                  "line": 379,
+                  "column": 58
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "mutatedNativeReturn": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 1,
+        "warnings": 15,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 3,
+        "contradictedStructuralClaims": 1,
+        "unverifiedStructuralClaims": 14,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-L003",
+          "message": "Qualitative claim requires evidence: `efficient`.",
+          "evidence": []
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 794,
+                  "column": 5
+                },
+                "end": {
+                  "line": 829,
+                  "column": 71
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 831,
+                  "column": 5
+                },
+                "end": {
+                  "line": 832,
+                  "column": 53
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G006",
+          "message": "Return type is documented as `str` but the source type is `bytes`.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 876,
+                  "column": 5
+                },
+                "end": {
+                  "line": 882,
+                  "column": 29
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 935,
+                  "column": 5
+                },
+                "end": {
+                  "line": 959,
+                  "column": 21
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 884,
+                  "column": 5
+                },
+                "end": {
+                  "line": 905,
+                  "column": 32
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 907,
+                  "column": 5
+                },
+                "end": {
+                  "line": 924,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 926,
+                  "column": 5
+                },
+                "end": {
+                  "line": 933,
+                  "column": 27
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return claim for Response.next lacks an unambiguous, inspectable class/member binding.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 515,
+                  "column": 1
+                },
+                "end": {
+                  "line": 1076,
+                  "column": 43
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 1037,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1063,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 982,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1005,
+                  "column": 32
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 1007,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1026,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 1028,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1035,
+                  "column": 27
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return claim for Response.anext lacks an unambiguous, inspectable class/member binding.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 515,
+                  "column": 1
+                },
+                "end": {
+                  "line": 1076,
+                  "column": 43
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_urls.py",
+              "range": {
+                "start": {
+                  "line": 327,
+                  "column": 5
+                },
+                "end": {
+                  "line": 340,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return claim for Headers.copy lacks an unambiguous, inspectable class/member binding.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 139,
+                  "column": 1
+                },
+                "end": {
+                  "line": 379,
+                  "column": 58
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "boundRead": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 0,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 1,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": []
+    },
+    "boundReadWrongReturn": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 1,
+        "warnings": 0,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 1,
+        "unverifiedStructuralClaims": 0,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G006",
+          "message": "Return type is documented as `str` but the source type is `bytes`.",
+          "evidence": [
+            {
+              "path": "httpx/_models.py",
+              "range": {
+                "start": {
+                  "line": 876,
+                  "column": 5
+                },
+                "end": {
+                  "line": 882,
+                  "column": 29
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "boundRequest": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 13,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 18,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 13,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `url` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 41,
+                  "column": 5
+                },
+                "end": {
+                  "line": 41,
+                  "column": 19
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `params` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 43,
+                  "column": 5
+                },
+                "end": {
+                  "line": 43,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `content` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 44,
+                  "column": 5
+                },
+                "end": {
+                  "line": 44,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `data` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 45,
+                  "column": 5
+                },
+                "end": {
+                  "line": 45,
+                  "column": 29
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `files` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 46,
+                  "column": 5
+                },
+                "end": {
+                  "line": 46,
+                  "column": 31
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `json` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 47,
+                  "column": 5
+                },
+                "end": {
+                  "line": 47,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `headers` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 48,
+                  "column": 5
+                },
+                "end": {
+                  "line": 48,
+                  "column": 32
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `cookies` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 49,
+                  "column": 5
+                },
+                "end": {
+                  "line": 49,
+                  "column": 32
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `auth` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 50,
+                  "column": 5
+                },
+                "end": {
+                  "line": 50,
+                  "column": 27
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `proxy` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 51,
+                  "column": 5
+                },
+                "end": {
+                  "line": 51,
+                  "column": 29
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `timeout` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 52,
+                  "column": 5
+                },
+                "end": {
+                  "line": 52,
+                  "column": 26
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `verify` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 54,
+                  "column": 5
+                },
+                "end": {
+                  "line": 54,
+                  "column": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 39,
+                  "column": 1
+                },
+                "end": {
+                  "line": 120,
+                  "column": 10
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "boundRequestWrongParameter": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 1,
+        "warnings": 14,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 16,
+        "contradictedStructuralClaims": 1,
+        "unverifiedStructuralClaims": 13,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G004",
+          "message": "Parameter `method` is not documented.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 40,
+                  "column": 5
+                },
+                "end": {
+                  "line": 40,
+                  "column": 16
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G003",
+          "message": "`missing` is not a parameter of `request`.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 39,
+                  "column": 1
+                },
+                "end": {
+                  "line": 120,
+                  "column": 10
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `url` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 41,
+                  "column": 5
+                },
+                "end": {
+                  "line": 41,
+                  "column": 19
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `params` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 43,
+                  "column": 5
+                },
+                "end": {
+                  "line": 43,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `content` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 44,
+                  "column": 5
+                },
+                "end": {
+                  "line": 44,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `data` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 45,
+                  "column": 5
+                },
+                "end": {
+                  "line": 45,
+                  "column": 29
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `files` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 46,
+                  "column": 5
+                },
+                "end": {
+                  "line": 46,
+                  "column": 31
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `json` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 47,
+                  "column": 5
+                },
+                "end": {
+                  "line": 47,
+                  "column": 28
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `headers` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 48,
+                  "column": 5
+                },
+                "end": {
+                  "line": 48,
+                  "column": 32
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `cookies` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 49,
+                  "column": 5
+                },
+                "end": {
+                  "line": 49,
+                  "column": 32
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `auth` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 50,
+                  "column": 5
+                },
+                "end": {
+                  "line": 50,
+                  "column": 27
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `proxy` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 51,
+                  "column": 5
+                },
+                "end": {
+                  "line": 51,
+                  "column": 29
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `timeout` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 52,
+                  "column": 5
+                },
+                "end": {
+                  "line": 52,
+                  "column": 26
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `verify` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 54,
+                  "column": 5
+                },
+                "end": {
+                  "line": 54,
+                  "column": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The return type is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_api.py",
+              "range": {
+                "start": {
+                  "line": 39,
+                  "column": 1
+                },
+                "end": {
+                  "line": 120,
+                  "column": 10
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "boundSubclassMethod": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 1,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 0,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 9,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "`Client.get` has incomplete symbol evidence; structural claims were not compared.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1036,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1063,
+                  "column": 10
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

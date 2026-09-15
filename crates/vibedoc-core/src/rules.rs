@@ -491,6 +491,7 @@ fn check_grounding(
                 document,
                 symbol,
                 &document.typedoc_claims(&scope),
+                true,
                 config,
                 result,
             ),
@@ -660,6 +661,13 @@ fn validate_scope(
     options: CheckOptions,
     result: &mut CheckResult,
 ) {
+    if document.profile == DocumentProfile::Reference
+        && symbol.adapter == "python"
+        && symbol.kind == vibedoc_protocol::SymbolKind::Class
+    {
+        validate_python_members(document, scope, symbol, graph, config, result);
+        return;
+    }
     let typedoc_scopes = document.typedoc_scopes();
     let typedoc = typedoc_scopes.iter().find(|candidate| {
         candidate.bytes == scope.bytes
@@ -674,7 +682,7 @@ fn validate_scope(
         document.reference_claims(scope)
     };
     if document.profile == DocumentProfile::Reference {
-        validate_reference_claims(document, symbol, &claims, config, result);
+        validate_reference_claims(document, symbol, &claims, true, config, result);
     }
     if options.experimental || config.experimental.prose_grounding {
         check_experimental(document, scope, symbol, graph, config, result);
@@ -682,10 +690,63 @@ fn validate_scope(
     }
 }
 
+fn validate_python_members(
+    document: &Document,
+    scope: &BindingScope,
+    class: &Symbol,
+    graph: &FactGraph,
+    config: &Config,
+    result: &mut CheckResult,
+) {
+    for (name, claim) in document.python_member_returns(scope) {
+        let qualified = format!("{}.{name}", class.qualified_name);
+        let members = graph
+            .symbols
+            .iter()
+            .filter(|s| {
+                s.adapter == "python"
+                    && s.kind == vibedoc_protocol::SymbolKind::Method
+                    && s.qualified_name == qualified
+                    && normalize_source_path(&s.declaration.path)
+                        == normalize_source_path(&class.declaration.path)
+            })
+            .collect::<Vec<_>>();
+        if class.confidence != Confidence::Incomplete && members.len() == 1 {
+            validate_reference_claims(
+                document,
+                members[0],
+                &ReferenceClaims {
+                    return_type: Some(claim),
+                    ..ReferenceClaims::default()
+                },
+                false,
+                config,
+                result,
+            );
+        } else {
+            result.verification.unverified_structural_claims += 1;
+            push(
+                &mut result.diagnostics,
+                config,
+                "VDOC-G008",
+                format!(
+                    "The return claim for {qualified} lacks an unambiguous, inspectable class/member binding."
+                ),
+                document,
+                claim.bytes,
+                vec![class.declaration.clone()],
+                Some("Use an explicit source binding to a directly declared method.".into()),
+                false,
+            );
+        }
+    }
+}
+
 fn validate_reference_claims(
     document: &Document,
     symbol: &Symbol,
     claims: &ReferenceClaims,
+    check_parameter_completeness: bool,
     config: &Config,
     result: &mut CheckResult,
 ) {
@@ -833,7 +894,10 @@ fn validate_reference_claims(
         }
     }
     for parameter in &signature.parameters {
-        if !parameter.destructured && !documented_names.contains(parameter.name.as_str()) {
+        if check_parameter_completeness
+            && !parameter.destructured
+            && !documented_names.contains(parameter.name.as_str())
+        {
             push(
                 &mut result.diagnostics,
                 config,

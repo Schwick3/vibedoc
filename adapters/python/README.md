@@ -47,7 +47,7 @@ the CLI's default adapter for explicit reference paths remains TypeScript.
 ## Evidence boundaries
 
 - Top-level functions, async functions, and directly declared class methods.
-  Nested functions, inherited methods, re-exports, classes themselves, and
+  Class declarations are emitted for binding. Nested functions, inherited methods, re-exports, and
   properties are not independently verified.
 - Positional, keyword-only, variadic parameters, and source locations. A default
   records optionality; its expression is not evaluated or exported. The current
@@ -84,3 +84,28 @@ python3 scripts/test-python-project.py /path/to/python-dotenv /tmp/python-result
 ```
 
 See the [pinned real-project evaluation](../../tests/evaluations/python-dotenv.md).
+
+## Handwritten class reference lists
+
+A reference heading containing a single inline-code class name binds only when
+that name identifies one source symbol. Under that heading, top-level list rows
+of the form shown below supply method return claims:
+
+    ## `Response`
+
+    * `def .read()` - **bytes**
+    * `def .take(key)` - `bytes`
+
+The optional dot before the method name is accepted. Members are resolved by
+qualified class name and source file; a same-named method on another class or
+in another file is not substituted. Duplicate class names require an explicit
+class source directive, which takes precedence.
+
+This format checks return types only. Parameter text inside the signature
+identifies the row's callable but is not verified; no missing-parameter warnings
+are inferred from these rows. Constructor rows, properties, rows without return
+types, and generator directives are outside this subset. Missing, ambiguous,
+decorated, or otherwise incomplete members remain unverified.
+
+The [HTTPX evaluation](../../tests/evaluations/httpx.md) checks unchanged native
+Markdown and a deliberately wrong native return claim.

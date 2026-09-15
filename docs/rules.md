@@ -104,3 +104,16 @@ by default. Experimental prose checks are warning-only.
 No diagnostic for a free-form statement means only that no enabled rule found
 a problem. It does not mean that Vibedoc verified the statement against source
 code.
+
+## Python class reference lists
+
+The Python adapter exposes class declarations for binding. A reference heading
+containing a single inline-code class name binds to a unique class; explicit
+source directives can select a class when names collide. Handwritten method
+rows supply return claims for directly declared methods in that class and
+source file. Signature parameter text is not checked by this format. Missing
+or incomplete member evidence emits VDOC-G008.
+
+Properties, constructors, and documentation-generator directives remain outside
+this subset. Recognizing a class heading alone does not count as verified API
+coverage. See the [Python adapter boundaries](../adapters/python/README.md).

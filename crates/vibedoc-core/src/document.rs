@@ -258,8 +258,73 @@ impl Document {
         scopes
     }
 
-    /// Recognize TypeDoc method/function sections only when a TS signature and
-    /// a local source-path label accompany them. Link destinations are never fetched.
+    /// Read top-level method-return list rows; signature parameters are not claims.
+    pub fn python_member_returns(&self, scope: &BindingScope) -> Vec<(String, DocumentedValue)> {
+        let pattern = Regex::new(r"^def \.?([A-Za-z_][A-Za-z0-9_]*)\([^\r\n)]*\) - (.+)$").unwrap();
+        let mut claims = Vec::new();
+        let mut depth = 0usize;
+        let mut quote_depth = 0usize;
+        let mut paragraph: Option<TextSpan> = None;
+        let mut signature_code = false;
+        for (event, range) in Parser::new(&self.source[scope.bytes.clone()]).into_offset_iter() {
+            match event {
+                Event::Start(Tag::BlockQuote(_)) => quote_depth += 1,
+                Event::End(TagEnd::BlockQuote(_)) => quote_depth = quote_depth.saturating_sub(1),
+                Event::Start(Tag::Item) => {
+                    depth += 1;
+                    if depth == 1 && quote_depth == 0 {
+                        paragraph = Some(TextSpan {
+                            text: String::new(),
+                            bytes: scope.bytes.start + range.start..scope.bytes.start + range.end,
+                        });
+                        signature_code = false;
+                    }
+                }
+                Event::Start(Tag::Paragraph) if depth == 1 && quote_depth == 0 => {
+                    paragraph = Some(TextSpan {
+                        text: String::new(),
+                        bytes: scope.bytes.start + range.start..scope.bytes.start + range.end,
+                    });
+                    signature_code = false;
+                }
+                Event::Code(value) if paragraph.is_some() && depth == 1 && quote_depth == 0 => {
+                    let paragraph = paragraph.as_mut().unwrap();
+                    if paragraph.text.is_empty() && value.starts_with("def ") {
+                        signature_code = true;
+                    }
+                    paragraph.text.push_str(&value);
+                }
+                Event::Text(value) if paragraph.is_some() && depth == 1 && quote_depth == 0 => {
+                    paragraph.as_mut().unwrap().text.push_str(&value)
+                }
+                Event::End(TagEnd::Paragraph | TagEnd::Item) => {
+                    if depth == 1
+                        && quote_depth == 0
+                        && let Some(paragraph) = paragraph.take()
+                        && signature_code
+                        && let Some(found) = pattern.captures(&paragraph.text)
+                        && &found[1] != "__init__"
+                    {
+                        claims.push((
+                            found[1].into(),
+                            DocumentedValue {
+                                value: found[2].trim().into(),
+                                bytes: paragraph.bytes,
+                            },
+                        ));
+                    }
+                    if matches!(event, Event::End(TagEnd::Item)) {
+                        depth = depth.saturating_sub(1);
+                    }
+                }
+                Event::Start(Tag::CodeBlock(_)) => paragraph = None,
+                _ => {}
+            }
+        }
+        claims
+    }
+
+    /// Recognize TypeDoc sections with a matching signature and local source label.
     pub fn typedoc_scopes(&self) -> Vec<BindingScope> {
         let method =
             Regex::new(r"^(?:Function: |Method: )?([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\(\)$")
