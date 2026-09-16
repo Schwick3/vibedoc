@@ -24,14 +24,22 @@ language's native tooling without coupling the Rust core to one compiler.
 
 ## Trust boundary
 
-An adapter is an executable selected from `PATH` or an absolute command-line
-override. Vibedoc passes arguments directly to the operating system. It does
+An adapter is an executable selected from an absolute command-line override,
+the per-user managed registry, or `PATH`, in that order. Vibedoc passes arguments directly to the operating system. It does
 not interpret shell text and does not read executable paths from repository
 configuration.
 
 Standard output is reserved for newline-delimited JSON-RPC messages. Adapter
 logs use standard error. A protocol violation, timeout, incompatible version,
 or nonzero exit is an operational failure.
+
+The CLI owns explicit adapter downloading and installation; the core only reads
+the managed registry during discovery. Installation serializes store mutations,
+checks SHA-256 and archive paths, probes identity/version/protocol, and atomically
+activates validated immutable directories. Project analysis never downloads code.
+Custom manifests are explicitly trusted executable sources. HTTPS and checksums
+provide transport and artifact integrity, not independent publisher signatures.
+See [managed adapters](adapters.md) for the manifest and recovery contract.
 
 ## Fact model
 

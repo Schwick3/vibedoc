@@ -53,6 +53,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
@@ -60,6 +63,7 @@ jobs:
       - run: npm test
       - run: ./scripts/test-e2e.sh
       - run: ./scripts/test-evaluation.sh
+      - run: python3 scripts/test-managed-adapters.py
 
   build-cli:
     needs: [prepare, quality]
@@ -113,6 +117,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: ./scripts/package-typescript-adapter.sh "${{ needs.prepare.outputs.version }}" dist
+      - run: ./scripts/package-python-adapter.sh "${{ needs.prepare.outputs.version }}" dist
       - name: Smoke-test packaged adapter
         run: |
           temporary=$(mktemp -d)
@@ -123,7 +128,7 @@ jobs:
           printf '%s\n' "$output" | grep -q '"version":"${{ needs.prepare.outputs.version }}"'
       - uses: actions/upload-artifact@v7
         with:
-          name: release-adapter-typescript
+          name: release-adapters
           path: dist/*.tar.gz
           if-no-files-found: error
 
@@ -142,7 +147,8 @@ jobs:
           pattern: release-*
           path: dist
           merge-multiple: true
-      - run: node scripts/write-release-checksums.mjs dist/SHA256SUMS dist/*.tar.gz
+      - run: node scripts/write-adapter-manifest.mjs "${{ needs.prepare.outputs.version }}" dist
+      - run: node scripts/write-release-checksums.mjs dist/SHA256SUMS dist/*.tar.gz dist/adapters.json
       - name: Publish GitHub release
         if: github.event_name == 'push'
         env:

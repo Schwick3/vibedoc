@@ -5,8 +5,12 @@ Python in isolated mode; analyzed source is parsed with
 [Python's AST parser](https://docs.python.org/3/library/ast.html), never imported,
 executed, or passed to annotation evaluation.
 
-Build the CLI with `cargo build --workspace`, then configure explicit Python
-sources and documents in `vibedoc.toml`:
+Install with `vibedoc adapter install python` when a versioned manifest is available.
+For local packages before publication, see [managed adapters](../../docs/adapters.md).
+Managed installation uses an existing `python3` on PATH and requires no pip packages.
+
+For source development, build the CLI with `cargo build --workspace`. Configure
+explicit Python sources and documents in `vibedoc.toml`:
 
 ```toml
 version = 1

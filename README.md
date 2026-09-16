@@ -31,8 +31,10 @@ vibedoc doctor
 ```
 
 The TypeScript adapter remains a separate release artifact, but the Homebrew
-formula installs it as Vibedoc's default adapter. Future adapters can use the
-same external-adapter protocol without being compiled into the Rust CLI.
+formula installs it as Vibedoc's default adapter. Python and TypeScript can also
+be installed with `vibedoc adapter install NAME` when versioned manifests are
+available. See [managed adapters](docs/adapters.md) for runtime requirements,
+local installation before publication, and recovery instructions.
 
 ## Install from source
 
@@ -128,6 +130,9 @@ without importing project code; unsupported types remain explicitly unverified.
 ## Commands
 
 ```text
+vibedoc adapter install <python|typescript> [--version X.Y.Z | --manifest PATH_OR_HTTPS_URL] [--format text|json]
+vibedoc adapter list [--format text|json]
+vibedoc adapter remove <python|typescript> [--format text|json]
 vibedoc init [--force]
 vibedoc check [PATHS...] [--config PATH] [--profile guide|reference]
               [--format text|json] [--project adapter=PATH]
@@ -180,8 +185,9 @@ Document sets must not assign conflicting profiles to one file. Monorepo
 projects are intentionally explicit; Vibedoc does not recursively discover
 project configurations.
 
-Adapter executables are resolved as `vibedoc-adapter-<name>` on `PATH`. The
-`--adapter-command` option accepts an absolute executable path. Repository
+Adapter discovery prefers an absolute `--adapter-command` override, then an active
+user-managed installation, then `vibedoc-adapter-<name>` on `PATH`. Project checks
+never download adapters. Repository
 configuration cannot supply executable commands, and Vibedoc never starts an
 adapter through a shell.
 
@@ -221,7 +227,8 @@ evaluations against pinned upstream revisions.
 ## Releases
 
 Public releases contain native CLI archives for Apple Silicon macOS and ARM64
-or x86-64 Linux, plus a platform-independent TypeScript adapter archive. See
+or x86-64 Linux. Packaging also produces platform-independent TypeScript and
+Python adapter archives and a checksummed installation manifest. See
 [RELEASING.md](RELEASING.md) for the release and Homebrew publication process.
 
 ## Scope

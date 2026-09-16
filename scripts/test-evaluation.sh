@@ -10,11 +10,14 @@ SCHEMA="$REPOSITORY_ROOT/schemas/vibedoc-report.schema.json"
 PATH="$ADAPTER_DIRECTORY:$PATH"
 export PATH
 
+TEMP_DIRECTORY=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIRECTORY"' EXIT HUP INT TERM
+VIBEDOC_ADAPTER_HOME="$TEMP_DIRECTORY/adapters"
+export VIBEDOC_ADAPTER_HOME
+
 cargo build --workspace --manifest-path "$REPOSITORY_ROOT/Cargo.toml"
 npm --prefix "$REPOSITORY_ROOT" run build
 
-TEMP_DIRECTORY=$(mktemp -d)
-trap 'rm -rf "$TEMP_DIRECTORY"' EXIT HUP INT TERM
 
 (cd "$PROJECT" && "$VIBEDOC" doctor --format json) >"$TEMP_DIRECTORY/doctor.json"
 (cd "$PROJECT" && "$VIBEDOC" inspect \

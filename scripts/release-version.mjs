@@ -18,7 +18,7 @@ export function parseWorkspaceVersion(cargoToml) {
   return version[1];
 }
 
-export function validateReleaseVersions(tag, cargoVersion, adapterVersion) {
+export function validateReleaseVersions(tag, cargoVersion, adapterVersion, pythonVersion) {
   const match = STABLE_TAG.exec(tag);
   assert(match, "release tag must match vMAJOR.MINOR.PATCH; received " + tag);
   const releaseVersion = tag.slice(1);
@@ -32,6 +32,7 @@ export function validateReleaseVersions(tag, cargoVersion, adapterVersion) {
     releaseVersion,
     "TypeScript adapter version " + adapterVersion + " does not match tag " + tag,
   );
+  assert.equal(pythonVersion, releaseVersion, "Python adapter version " + pythonVersion + " does not match tag " + tag);
   return releaseVersion;
 }
 
@@ -51,7 +52,11 @@ export function readReleaseVersions(repositoryRoot) {
     "string",
     "TypeScript adapter package.json does not contain a version",
   );
+  const pythonSource = fs.readFileSync(path.join(repositoryRoot, "adapters/python/adapter.py"), "utf8");
+  const pythonVersion = pythonSource.match(/^VERSION = "([^"]+)"$/m)?.[1];
+  assert(pythonVersion, "Python adapter does not contain VERSION");
   return {
+    pythonVersion,
     cargoVersion: parseWorkspaceVersion(cargoToml),
     adapterVersion: adapterPackage.version,
   };
@@ -72,6 +77,7 @@ function main() {
       tag,
       versions.cargoVersion,
       versions.adapterVersion,
+      versions.pythonVersion,
     ) + "\n",
   );
 }

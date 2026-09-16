@@ -2,7 +2,9 @@ use std::fs;
 use std::process::{Command, Output};
 
 fn run(directory: &std::path::Path, arguments: &[&str]) -> Output {
+    let store = tempfile::tempdir().unwrap();
     Command::new(env!("CARGO_BIN_EXE_vibedoc"))
+        .env("VIBEDOC_ADAPTER_HOME", store.path())
         .current_dir(directory)
         .args(arguments)
         .output()

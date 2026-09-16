@@ -1,7 +1,6 @@
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::collections::BTreeMap;
-use std::env;
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, Command, Stdio};
@@ -24,7 +23,9 @@ pub struct AdapterRunOptions {
 
 #[derive(Debug, Error)]
 pub enum AdapterError {
-    #[error("adapter `{name}` was not found on PATH; expected executable `{executable}`")]
+    #[error(
+        "adapter `{name}` was not found in the managed store or on PATH; expected executable `{executable}`"
+    )]
     NotFound { name: String, executable: String },
     #[error("adapter override for `{name}` must be an absolute path: {path}")]
     OverrideNotAbsolute { name: String, path: PathBuf },
@@ -85,14 +86,14 @@ pub fn find_adapter(
         return Err(AdapterError::NotExecutable(path.clone()));
     }
 
+    if crate::managed::NAMES.contains(&name)
+        && let Some(path) = crate::managed::resolve(&crate::managed::home()?, name)?
+    {
+        return Ok(path);
+    }
     let executable = format!("vibedoc-adapter-{name}");
-    if let Some(paths) = env::var_os("PATH") {
-        for directory in env::split_paths(&paths) {
-            let candidate = directory.join(&executable);
-            if is_executable(&candidate) {
-                return Ok(candidate);
-            }
-        }
+    if let Some(path) = crate::managed::on_path(name) {
+        return Ok(path);
     }
     Err(AdapterError::NotFound {
         name: name.to_string(),
@@ -174,8 +175,26 @@ impl AdapterClient {
 
     pub fn shutdown(mut self) -> Result<(), AdapterError> {
         let _: serde_json::Value = self.request("shutdown", serde_json::json!({}))?;
-        let _ = self.child.wait();
-        Ok(())
+        let deadline = std::time::Instant::now() + self.options.timeout;
+        loop {
+            if let Some(status) = self.child.try_wait()? {
+                return if status.success() {
+                    Ok(())
+                } else {
+                    Err(AdapterError::Exited {
+                        method: "shutdown".into(),
+                        status: status.to_string(),
+                    })
+                };
+            }
+            if std::time::Instant::now() >= deadline {
+                return Err(AdapterError::Timeout {
+                    method: "shutdown exit".into(),
+                    seconds: self.options.timeout.as_secs(),
+                });
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
     }
 
     fn request<P: Serialize, R: DeserializeOwned>(
@@ -281,7 +300,7 @@ fn normalize_path(path: &Path) -> String {
 }
 
 #[cfg(unix)]
-fn is_executable(path: &Path) -> bool {
+pub(crate) fn is_executable(path: &Path) -> bool {
     use std::os::unix::fs::PermissionsExt;
     path.metadata()
         .map(|metadata| metadata.is_file() && metadata.permissions().mode() & 0o111 != 0)
@@ -289,7 +308,7 @@ fn is_executable(path: &Path) -> bool {
 }
 
 #[cfg(not(unix))]
-fn is_executable(path: &Path) -> bool {
+pub(crate) fn is_executable(path: &Path) -> bool {
     path.is_file()
 }
 
@@ -374,6 +393,31 @@ read -r line
             Err(AdapterError::IdentityMismatch { .. }) => {}
             Err(error) => panic!("expected an identity mismatch, received {error:?}"),
             Ok(_) => panic!("expected an identity mismatch, adapter initialized"),
+        }
+    }
+
+    #[test]
+    fn shutdown_bounds_exit_and_reports_failure() {
+        for (ending, timed_out) in [("while :; do :; done", true), ("exit 7", false)] {
+            let body = format!(
+                r#"#!/bin/sh
+read -r line
+printf '%s\n' '{{"jsonrpc":"2.0","id":1,"result":{{"protocolVersion":1,"adapter":{{"name":"test","version":"0.1.0","runtime":"sh"}},"capabilities":{{"languages":[],"extensions":[],"relationships":[]}}}}}}'
+read -r line
+printf '%s\n' '{{"jsonrpc":"2.0","id":2,"result":{{}}}}'
+{ending}
+"#
+            );
+            let (_directory, command) = script(&body);
+            let mut client =
+                AdapterClient::start(options(command, Duration::from_secs(5))).unwrap();
+            client.options.timeout = Duration::from_millis(250);
+            let result = client.shutdown();
+            if timed_out {
+                assert!(matches!(result, Err(AdapterError::Timeout { .. })));
+            } else {
+                assert!(matches!(result, Err(AdapterError::Exited { .. })));
+            }
         }
     }
 

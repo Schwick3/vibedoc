@@ -9,6 +9,11 @@ VIBEDOC="$REPOSITORY_ROOT/target/debug/vibedoc"
 PATH="$REPOSITORY_ROOT/adapters/typescript/bin:$PATH"
 export PATH
 
+TEMP_DIRECTORY=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIRECTORY"' EXIT HUP INT TERM
+VIBEDOC_ADAPTER_HOME="$TEMP_DIRECTORY/adapters"
+export VIBEDOC_ADAPTER_HOME
+
 cargo build --workspace --manifest-path "$REPOSITORY_ROOT/Cargo.toml"
 npm --prefix "$REPOSITORY_ROOT" run build
 
@@ -17,8 +22,6 @@ npm --prefix "$REPOSITORY_ROOT" run build
 (cd "$FIXTURE" && "$VIBEDOC" inspect --adapter typescript --symbol AuthenticationService.login --format json)
 (cd "$FIXTURE" && "$VIBEDOC" explain VDOC-G006 --format json)
 
-TEMP_DIRECTORY=$(mktemp -d)
-trap 'rm -rf "$TEMP_DIRECTORY"' EXIT HUP INT TERM
 
 set +e
 (cd "$FIXTURE" && "$VIBEDOC" check cases/invalid.md \

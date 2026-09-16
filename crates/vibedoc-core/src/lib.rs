@@ -2,6 +2,7 @@ pub mod adapter;
 pub mod config;
 pub mod diagnostic;
 pub mod document;
+pub mod managed;
 pub mod rules;
 
 pub use adapter::{AdapterClient, AdapterError, AdapterRunOptions, find_adapter};

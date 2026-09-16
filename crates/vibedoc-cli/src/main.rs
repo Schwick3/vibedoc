@@ -1,3 +1,4 @@
+mod installer;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -29,6 +30,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Install, list, or remove user-managed source adapters.
+    Adapter(installer::AdapterArgs),
     /// Create a minimal vibedoc.toml in the current directory.
     Init(InitArgs),
     /// Check Markdown documentation.
@@ -172,6 +175,7 @@ fn main() -> ExitCode {
 
 fn command_format(command: &Command) -> OutputFormat {
     match command {
+        Command::Adapter(args) => args.format(),
         Command::Init(_) => OutputFormat::Text,
         Command::Check(args) => args.format,
         Command::Doctor(args) => args.format,
@@ -182,6 +186,7 @@ fn command_format(command: &Command) -> OutputFormat {
 
 fn run(command: Command) -> Result<u8, CliError> {
     match command {
+        Command::Adapter(args) => installer::run(args),
         Command::Init(args) => init(args),
         Command::Check(args) => check(args),
         Command::Doctor(args) => doctor(args),

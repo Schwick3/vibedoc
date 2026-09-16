@@ -10,8 +10,11 @@ import {
 } from "./generate-homebrew-formulae.mjs";
 import {
   parseWorkspaceVersion,
+  readReleaseVersions,
   validateReleaseVersions,
 } from "./release-version.mjs";
+import { adapterManifest } from "./write-adapter-manifest.mjs";
+import { createHash } from "node:crypto";
 import { checksumFiles } from "./write-release-checksums.mjs";
 
 test("release versions require a stable matching tag", () => {
@@ -21,9 +24,9 @@ test("release versions require a stable matching tag", () => {
     ),
     "1.2.3",
   );
-  assert.equal(validateReleaseVersions("v1.2.3", "1.2.3", "1.2.3"), "1.2.3");
+  assert.equal(validateReleaseVersions("v1.2.3", "1.2.3", "1.2.3", "1.2.3"), "1.2.3");
   assert.throws(
-    () => validateReleaseVersions("1.2.3", "1.2.3", "1.2.3"),
+    () => validateReleaseVersions("1.2.3", "1.2.3", "1.2.3", "1.2.3"),
     /vMAJOR\.MINOR\.PATCH/,
   );
   assert.throws(
@@ -34,6 +37,10 @@ test("release versions require a stable matching tag", () => {
     () => validateReleaseVersions("v1.2.3", "1.2.3", "1.2.4"),
     /TypeScript adapter version/,
   );
+});
+
+test("Python version must match too", () => {
+  assert.throws(() => validateReleaseVersions("v1.2.3", "1.2.3", "1.2.3", "1.2.4"), /Python adapter version/);
 });
 
 test("checksums are deterministic and formulae require every artifact", () => {
@@ -88,4 +95,27 @@ test("checksums are deterministic and formulae require every artifact", () => {
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }
+});
+
+
+test("adapter manifests pin both actual archives and executable layouts", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vibedoc-manifest-"));
+  try {
+    const { cargoVersion: version } = readReleaseVersions(path.resolve(import.meta.dirname, ".."));
+    for (const name of ["python", "typescript"]) {
+      fs.writeFileSync(path.join(directory, `vibedoc-adapter-${name}-v${version}.tar.gz`), name);
+    }
+    const manifest = adapterManifest(version, directory);
+    assert.equal(manifest.schemaVersion, 1);
+    assert.deepEqual(manifest.adapters.map((entry) => entry.executable), ["bin/vibedoc-adapter-python", "dist/index.js"]);
+    for (const entry of manifest.adapters) {
+      assert.equal(entry.sha256, createHash("sha256").update(entry.name).digest("hex"));
+      assert.equal(entry.version, version);
+      assert.equal(entry.protocolVersion, 1);
+      assert.equal(path.basename(entry.archive), entry.archive);
+    }
+    assert.deepEqual(adapterManifest(version, directory), manifest);
+    fs.unlinkSync(path.join(directory, manifest.adapters[0].archive));
+    assert.throws(() => adapterManifest(version, directory), /ENOENT/);
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });

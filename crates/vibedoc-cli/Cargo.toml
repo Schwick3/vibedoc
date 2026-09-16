@@ -11,6 +11,14 @@ name = "vibedoc"
 path = "src/main.rs"
 
 [dependencies]
+anyhow = "1"
+flate2 = "1"
+fs2 = "0.4"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+sha2 = "0.10"
+tar = "0.4"
+tempfile.workspace = true
+walkdir.workspace = true
 clap.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -19,4 +27,5 @@ vibedoc-core = { path = "../vibedoc-core" }
 vibedoc-protocol = { path = "../vibedoc-protocol" }
 
 [dev-dependencies]
-tempfile.workspace = true
+rcgen = "0.14"
+rustls = { version = "0.23", default-features = false, features = ["std", "ring"] }
