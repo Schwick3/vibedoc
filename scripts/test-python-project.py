@@ -88,10 +88,29 @@ with tempfile.TemporaryDirectory(prefix=".vibedoc-python-", dir=CHECKOUT) as dir
 - `bool`
 """)
         uncertain = check("partialAnnotations", document, 0)
-        assert uncertain["verification"]["verifiedStructuralClaims"] == 10
-        assert uncertain["verification"]["unverifiedStructuralClaims"] == 3
+        assert uncertain["verification"]["verifiedStructuralClaims"] == 11
+        assert uncertain["verification"]["unverifiedStructuralClaims"] == 2
         assert uncertain["verification"]["contradictedStructuralClaims"] == 0
         check("partialAnnotationsDenyWarnings", document, 1, extra=("--deny-warnings",))
+        source = document.read_text()
+        document.write_text(source.replace("`encoding`: `Optional[str]`", "`encoding`: `str | None`"))
+        equivalent = check("equivalentOptionalEncoding", document, 0)
+        assert equivalent["verification"]["verifiedStructuralClaims"] == 11
+        assert equivalent["verification"]["unverifiedStructuralClaims"] == 2
+        document.write_text(source.replace("`encoding`: `Optional[str]`", "`encoding`: `int`"))
+        wrong = check("wrongEncodingType", document, 1)
+        assert wrong["verification"]["verifiedStructuralClaims"] == 10
+        assert wrong["verification"]["contradictedStructuralClaims"] == 1
+        assert wrong["verification"]["unverifiedStructuralClaims"] == 2
+        error = next(d for d in wrong["diagnostics"] if d["ruleId"] == "VDOC-G005")
+        assert error["evidence"][0]["path"] == "src/dotenv/main.py"
+        # Check the exact parameter declaration independently of emitted facts.
+        import ast
+        module = ast.parse((CHECKOUT / "src/dotenv/main.py").read_text())
+        function = next(n for n in module.body if isinstance(n, ast.FunctionDef) and n.name == "load_dotenv")
+        encoding = next(a for a in function.args.args if a.arg == "encoding")
+        assert error["evidence"][0]["range"]["start"] == {"line": encoding.lineno, "column": encoding.col_offset + 1}
+
     finally:
         config.unlink()
 assert git("status", "--porcelain", "--untracked-files=no") == ""

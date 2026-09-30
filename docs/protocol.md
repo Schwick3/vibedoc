@@ -45,7 +45,10 @@ The Python prototype uses `sourceGlobs` and rejects nonempty `projects`. It
 reports written AST annotations rather than inferred runtime behavior. Missing
 or unresolved types use `incomplete` confidence. Defaults map to parameter
 optionality; protocol v1 does not carry their expressions or Python parameter
-calling conventions. See [its supported subset](../adapters/python/README.md).
+calling conventions. Type facts retain written annotations in `display`; `normalized`
+contains supported expansions and workspace-relative qualified class identities.
+No additional fields or alias symbols are emitted. See
+[its supported subset](../adapters/python/README.md).
 
 ## Shutdown
 

@@ -839,7 +839,20 @@ fn validate_reference_claims(
         };
         result.verification.verified_structural_claims += 1;
         if let Some(documented_type) = &claim.type_name {
-            if claim.type_incomplete
+            let comparison = if symbol.adapter == "python" {
+                crate::python_types::compare(documented_type, &parameter.type_fact)
+            } else {
+                Some(
+                    equivalent_type(documented_type, &parameter.type_fact.normalized)
+                        || equivalent_type(documented_type, &parameter.type_fact.display)
+                        || (parameter.optional
+                            && normalize_type(documented_type)
+                                == normalize_type(&parameter.type_fact.display)
+                                    .trim_end_matches("|undefined")),
+                )
+            };
+            if comparison.is_none()
+                || claim.type_incomplete
                 || parameter.destructured
                 || parameter.type_fact.confidence == Confidence::Incomplete
                 || matches!(parameter.type_fact.normalized.as_str(), "any" | "unknown")
@@ -854,6 +867,13 @@ fn validate_reference_claims(
                             "The documented callback type of `{}` omits parameter annotations; it was not compared.",
                             claim.name
                         )
+                    } else if comparison.is_none()
+                        && parameter.type_fact.confidence != Confidence::Incomplete
+                    {
+                        format!(
+                            "The documented type of `{}` uses an unsupported spelling or unresolved alias.",
+                            claim.name
+                        )
                     } else {
                         format!(
                             "The type of `{}` is not precise enough to compare.",
@@ -866,13 +886,7 @@ fn validate_reference_claims(
                     None,
                     false,
                 );
-            } else if !equivalent_type(documented_type, &parameter.type_fact.normalized)
-                && !equivalent_type(documented_type, &parameter.type_fact.display)
-                && !(parameter.optional
-                    && normalize_type(documented_type)
-                        == normalize_type(&parameter.type_fact.display)
-                            .trim_end_matches("|undefined"))
-            {
+            } else if comparison == Some(false) {
                 result.verification.contradicted_structural_claims += 1;
                 push(
                     &mut result.diagnostics,
@@ -917,7 +931,16 @@ fn validate_reference_claims(
     }
 
     if let Some(claim) = &claims.return_type {
-        if signature.return_type.confidence == Confidence::Incomplete
+        let comparison = if symbol.adapter == "python" {
+            crate::python_types::compare(&claim.value, &signature.return_type)
+        } else {
+            Some(
+                equivalent_type(&claim.value, &signature.return_type.normalized)
+                    || equivalent_type(&claim.value, &signature.return_type.display),
+            )
+        };
+        if comparison.is_none()
+            || signature.return_type.confidence == Confidence::Incomplete
             || matches!(signature.return_type.normalized.as_str(), "any" | "unknown")
         {
             result.verification.unverified_structural_claims += 1;
@@ -925,16 +948,21 @@ fn validate_reference_claims(
                 &mut result.diagnostics,
                 config,
                 "VDOC-G008",
-                "The return type is not precise enough to compare.".into(),
+                if comparison.is_none()
+                    && signature.return_type.confidence != Confidence::Incomplete
+                {
+                    "The documented return type uses an unsupported spelling or unresolved alias."
+                        .into()
+                } else {
+                    "The return type is not precise enough to compare.".into()
+                },
                 document,
                 claim.bytes.clone(),
                 vec![signature.declaration.clone()],
                 None,
                 false,
             );
-        } else if !equivalent_type(&claim.value, &signature.return_type.normalized)
-            && !equivalent_type(&claim.value, &signature.return_type.display)
-        {
+        } else if comparison == Some(false) {
             result.verification.contradicted_structural_claims += 1;
             push(
                 &mut result.diagnostics,

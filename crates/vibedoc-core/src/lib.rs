@@ -3,6 +3,7 @@ pub mod config;
 pub mod diagnostic;
 pub mod document;
 pub mod managed;
+mod python_types;
 pub mod rules;
 
 pub use adapter::{AdapterClient, AdapterError, AdapterRunOptions, find_adapter};

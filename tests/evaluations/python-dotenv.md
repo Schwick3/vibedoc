@@ -1,6 +1,6 @@
 # Python adapter evaluation: python-dotenv
 
-Evaluated September 11, 2026 with the Python adapter prototype and Python 3.12.0.
+Evaluated September 30, 2026 with bounded Python type resolution and Python 3.12.0.
 
 Source: [theskumar/python-dotenv](https://github.com/theskumar/python-dotenv),
 revision [a00cb2eed0704cd6d2071b2004c37e95ccc86ee5](https://github.com/theskumar/python-dotenv/tree/a00cb2eed0704cd6d2071b2004c37e95ccc86ee5).
@@ -17,8 +17,10 @@ expressions, or upstream scripts were executed. The adapter parsed
 | Unchanged upstream README, reference profile | 0 | 0 | 0 | 0 |
 | Controlled `find_dotenv` reference | 7 | 0 | 0 | 0 |
 | Wrong parameter name and return type | 4 | 2 | 0 | 1 |
-| Controlled `load_dotenv` reference | 10 | 0 | 3 | 0 |
-| Same partial reference with `--deny-warnings` | 10 | 0 | 3 | 1 |
+| Controlled `load_dotenv` reference | 11 | 0 | 2 | 0 |
+| Same partial reference with `--deny-warnings` | 11 | 0 | 2 | 1 |
+| Equivalent `str \| None` encoding type | 11 | 0 | 2 | 0 |
+| Wrong encoding type (`int`) | 10 | 1 | 2 | 1 |
 
 The unchanged README emits `VDOC-G010`: its prose and examples have no recognized
 structural reference claims. This is a coverage gap, not successful verification
@@ -32,17 +34,22 @@ produces `VDOC-G003` and `VDOC-G006`, with evidence at
 `src/dotenv/main.py:337`. A missing-parameter warning also identifies the omitted
 `filename`.
 
-For `load_dotenv`, all six names, three boolean annotations, and the boolean
-return annotation are verified. The three imported/alias annotations
-`Optional[StrPath]`, `Optional[IO[str]]`, and `Optional[str]` remain explicitly
-unverified with `VDOC-G008`. Matching annotation text does not make unresolved
-types exact.
+For `load_dotenv`, all six names, three boolean annotations, the boolean return,
+and `encoding: Optional[str]` now verify. The imported Optional constructor is
+recognized and normalizes to `None | str`; documenting `str | None` also verifies.
+Changing the documented encoding type to `int` produces VDOC-G005 with the exact
+parameter declaration as evidence. That location is checked independently from
+the pinned AST.
+
+`Optional[StrPath]` and `Optional[IO[str]]` remain unverified with VDOC-G008.
+StrPath contains a quoted external PathLike reference, and IO is outside the
+supported typing forms. Matching annotation text does not make these types exact.
 
 This establishes source binding, positive checks, contradictions, and abstention
 for a bounded Python subset. It does not establish broad Python documentation
-coverage, type inference, runtime behavior, or cross-module alias resolution.
-The existing protocol can carry these facts; it currently loses default
-expressions and positional-only/keyword-only calling conventions.
+coverage, type inference, runtime behavior, or general alias equivalence.
+Protocol v1 remains unchanged; it does not carry default expressions or
+positional-only/keyword-only calling conventions.
 
 Machine-readable results: [python-dotenv-results.json](python-dotenv-results.json).
 

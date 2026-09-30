@@ -119,14 +119,14 @@
       "exitCode": 0,
       "summary": {
         "errors": 0,
-        "warnings": 3,
+        "warnings": 2,
         "info": 0,
         "documents": 1
       },
       "verification": {
-        "verifiedStructuralClaims": 10,
+        "verifiedStructuralClaims": 11,
         "contradictedStructuralClaims": 0,
-        "unverifiedStructuralClaims": 3,
+        "unverifiedStructuralClaims": 2,
         "freeFormProseEvaluated": false
       },
       "diagnostics": [
@@ -163,25 +163,6 @@
                 "end": {
                   "line": 390,
                   "column": 30
-                }
-              }
-            }
-          ]
-        },
-        {
-          "ruleId": "VDOC-G008",
-          "message": "The type of `encoding` is not precise enough to compare.",
-          "evidence": [
-            {
-              "path": "src/dotenv/main.py",
-              "range": {
-                "start": {
-                  "line": 394,
-                  "column": 5
-                },
-                "end": {
-                  "line": 394,
-                  "column": 28
                 }
               }
             }
@@ -193,14 +174,124 @@
       "exitCode": 1,
       "summary": {
         "errors": 0,
-        "warnings": 3,
+        "warnings": 2,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 11,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 2,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `dotenv_path` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 389,
+                  "column": 5
+                },
+                "end": {
+                  "line": 389,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `stream` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 390,
+                  "column": 5
+                },
+                "end": {
+                  "line": 390,
+                  "column": 30
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "equivalentOptionalEncoding": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 2,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 11,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 2,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `dotenv_path` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 389,
+                  "column": 5
+                },
+                "end": {
+                  "line": 389,
+                  "column": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `stream` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "src/dotenv/main.py",
+              "range": {
+                "start": {
+                  "line": 390,
+                  "column": 5
+                },
+                "end": {
+                  "line": 390,
+                  "column": 30
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "wrongEncodingType": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 1,
+        "warnings": 2,
         "info": 0,
         "documents": 1
       },
       "verification": {
         "verifiedStructuralClaims": 10,
-        "contradictedStructuralClaims": 0,
-        "unverifiedStructuralClaims": 3,
+        "contradictedStructuralClaims": 1,
+        "unverifiedStructuralClaims": 2,
         "freeFormProseEvaluated": false
       },
       "diagnostics": [
@@ -243,8 +334,8 @@
           ]
         },
         {
-          "ruleId": "VDOC-G008",
-          "message": "The type of `encoding` is not precise enough to compare.",
+          "ruleId": "VDOC-G005",
+          "message": "Parameter `encoding` is documented as `int` but the source type is `Optional[str]`.",
           "evidence": [
             {
               "path": "src/dotenv/main.py",

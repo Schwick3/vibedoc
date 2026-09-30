@@ -1,7 +1,7 @@
 # HTTPX Python reference evaluation
 
-Evaluated September 14, 2026 with local single-inheritance confidence support added
-after Vibedoc commit d79c8589ee529619f9c241139f5e466d1a4453d7, using Python 3.12.0.
+Evaluated September 30, 2026 with bounded project-import and type-alias resolution
+after Vibedoc commit 3619950db5d8c2f15c82075585099a11cdec59c1, using Python 3.12.0.
 
 Source: [encode/httpx](https://github.com/encode/httpx), pinned at
 [b5addb64f0161ff6bfe94c124ef76f6a1fba5254](https://github.com/encode/httpx/tree/b5addb64f0161ff6bfe94c124ef76f6a1fba5254).
@@ -26,11 +26,16 @@ not the generated website.
 | Now: wrong Response.read return | 3 | 1 | 14 | 1 |
 | Explicit Response.read binding | 1 | 0 | 0 | 0 |
 | Explicit binding, wrong return | 0 | 1 | 0 | 1 |
-| Controlled request reference | 18 | 0 | 13 | 0 |
-| Controlled request, wrong parameter | 16 | 1 | 13 | 1 |
+| Controlled request reference | 20 | 0 | 11 | 0 |
+| Controlled request, wrong parameter | 18 | 1 | 11 | 1 |
 | Before inheritance support: Client.get | 0 | 0 | 9 | 0 |
-| Controlled Client.get reference | 8 | 0 | 9 | 0 |
-| Client.get, wrong parameter | 7 | 1 | 8 | 1 |
+| Before type resolution: Client.get | 8 | 0 | 9 | 0 |
+| Controlled Client.get reference | 11 | 0 | 6 | 0 |
+| Client.get, wrong parameter | 9 | 1 | 6 | 1 |
+| Client.get, wrong url type | 10 | 1 | 6 | 1 |
+| Client.get, wrong follow_redirects type | 10 | 1 | 6 | 1 |
+| Client.get, wrong return type | 10 | 1 | 6 | 1 |
+| Client.get, unknown documented return alias | 10 | 0 | 7 | 0 |
 | Controlled Client.close return | 1 | 0 | 0 | 0 |
 | Client.close, wrong return | 0 | 1 | 0 | 1 |
 
@@ -54,28 +59,33 @@ The adapter reads 23 Python files and emits 515 unique symbols: 428 callable
 symbols and 87 classes. Previously only the 428 callables were emitted.
 Symbol confidence alone does not imply that every annotation is supported.
 
-The controlled request reference has 15 parameter names. All names and three
-builtin annotations are verified, totaling 18 claims. Twelve parameter types
-plus the return type remain unverified: these include imported aliases,
-URL, Response, typing.Any, and ssl.SSLContext. Renaming method to missing
-produces VDOC-G003 and a missing-parameter warning while unresolved types
-continue to abstain.
+The controlled request reference has 15 parameter names. All names, three builtin
+annotations, URL | str, and the Response return now verify, totaling 20 claims.
+Eleven parameter types remain unverified, including broader aliases, typing.Any,
+and ssl.SSLContext. Renaming method to missing still produces VDOC-G003 and a
+missing-parameter warning while unresolved types continue to abstain.
 
-Client.get is directly declared on Client, which inherits from BaseClient.
-Both classes are declared in the same module, and their base chain passes the
-new conservative checks. The eight documented parameter names now verify;
-all eight parameter types and the return type remain unverified. No imported
-annotation resolution was added.
+Client.get is directly declared on Client, whose same-file BaseClient ancestry
+passes the existing confidence checks. Its eight parameter names, URL | str,
+bool | UseClientDefault, and Response return now verify. URL and Response resolve
+through explicit relative imports to selected class declarations; UseClientDefault
+is an earlier local class. Normalized types retain qualified identities such as
+httpx._models.Response, while displayed annotations retain their written spelling.
+The other six parameter types remain incomplete because their aliases contain
+forward references, unsupported typing forms, or Any.
 
 Renaming url to missing produces VDOC-G003 with the exact Client.get declaration
-as evidence. The missing source parameter also produces VDOC-G004. Its unmatched
-documented type is not compared, leaving eight unverified type claims.
-Client.close separately verifies its None return annotation and rejects a
-deliberately documented str return with VDOC-G006 and the exact source location.
+as evidence, plus VDOC-G004 for the missing source parameter. Replacing either
+newly supported parameter type with int produces VDOC-G005 at that parameter's
+source declaration. Replacing Response with str produces VDOC-G006 at Client.get.
+An unknown documented alias remains unverified, rather than being classified as
+a different type solely because its spelling differs.
 
-Native API coverage is unchanged at four verified and fourteen unverified claims.
-This milestone changes source confidence, not generator directives or Markdown
-recognition. The existing python-dotenv evaluation also retains its counts.
+Client.close still verifies None and rejects str with the exact source location.
+Native API coverage remains four verified and fourteen unverified claims; its
+wrong Response.read return is still detected. No generator directives or new
+Markdown formats were added. The python-dotenv evaluation separately improves
+load_dotenv from ten to eleven verified claims through Optional[str].
 
 Native rows referring to absent or incomplete members remain unverified.
 For example, Response.next and Response.anext have no matching direct method
@@ -99,7 +109,10 @@ Unknown ancestry, class decorators, metaclasses, ancestor hooks, rebinding,
 and method-level uncertainty continue to abstain. Inherited-only methods are
 not synthesized.
 
-Imported-type and alias resolution is the next separate milestone. Cross-file
+Type resolution follows only explicit relative imports to directly declared classes
+or assignment aliases in selected files. Conditional imports, re-export chains,
+absolute project imports, quoted forward references, unsupported typing forms,
+and unresolved document-side aliases remain outside the subset. Cross-file
 inheritance and additional documentation formats remain out of scope.
 
 ## Reproduce

@@ -1,8 +1,8 @@
 {
   "repository": "https://github.com/encode/httpx",
   "revision": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
-  "vibedocBaseRevision": "d79c8589ee529619f9c241139f5e466d1a4453d7",
-  "implementation": "Same-file single-inheritance confidence for directly declared Python methods",
+  "vibedocBaseRevision": "3619950db5d8c2f15c82075585099a11cdec59c1",
+  "implementation": "Bounded Python project imports, assignment aliases, and typing forms",
   "adapter": {
     "name": "python",
     "version": "0.1.2",
@@ -72,8 +72,8 @@
                 "name": "url",
                 "typeFact": {
                   "display": "URL | str",
-                  "normalized": "URL | str",
-                  "confidence": "incomplete"
+                  "normalized": "httpx._urls.URL | str",
+                  "confidence": "exact"
                 },
                 "optional": false,
                 "rest": false,
@@ -407,8 +407,8 @@
             ],
             "returnType": {
               "display": "Response",
-              "normalized": "Response",
-              "confidence": "incomplete"
+              "normalized": "httpx._models.Response",
+              "confidence": "exact"
             },
             "declaration": {
               "path": "httpx/_api.py",
@@ -503,8 +503,8 @@
                 "name": "url",
                 "typeFact": {
                   "display": "URL | str",
-                  "normalized": "URL | str",
-                  "confidence": "incomplete"
+                  "normalized": "httpx._urls.URL | str",
+                  "confidence": "exact"
                 },
                 "optional": false,
                 "rest": false,
@@ -623,8 +623,8 @@
                 "name": "follow_redirects",
                 "typeFact": {
                   "display": "bool | UseClientDefault",
-                  "normalized": "bool | UseClientDefault",
-                  "confidence": "incomplete"
+                  "normalized": "bool | httpx._client.UseClientDefault",
+                  "confidence": "exact"
                 },
                 "optional": true,
                 "rest": false,
@@ -694,8 +694,8 @@
             ],
             "returnType": {
               "display": "Response",
-              "normalized": "Response",
-              "confidence": "incomplete"
+              "normalized": "httpx._models.Response",
+              "confidence": "exact"
             },
             "declaration": {
               "path": "httpx/_client.py",
@@ -1416,36 +1416,17 @@
       "exitCode": 0,
       "summary": {
         "errors": 0,
-        "warnings": 13,
+        "warnings": 11,
         "info": 0,
         "documents": 1
       },
       "verification": {
-        "verifiedStructuralClaims": 18,
+        "verifiedStructuralClaims": 20,
         "contradictedStructuralClaims": 0,
-        "unverifiedStructuralClaims": 13,
+        "unverifiedStructuralClaims": 11,
         "freeFormProseEvaluated": false
       },
       "diagnostics": [
-        {
-          "ruleId": "VDOC-G008",
-          "message": "The type of `url` is not precise enough to compare.",
-          "evidence": [
-            {
-              "path": "httpx/_api.py",
-              "range": {
-                "start": {
-                  "line": 41,
-                  "column": 5
-                },
-                "end": {
-                  "line": 41,
-                  "column": 19
-                }
-              }
-            }
-          ]
-        },
         {
           "ruleId": "VDOC-G008",
           "message": "The type of `params` is not precise enough to compare.",
@@ -1654,25 +1635,6 @@
               }
             }
           ]
-        },
-        {
-          "ruleId": "VDOC-G008",
-          "message": "The return type is not precise enough to compare.",
-          "evidence": [
-            {
-              "path": "httpx/_api.py",
-              "range": {
-                "start": {
-                  "line": 39,
-                  "column": 1
-                },
-                "end": {
-                  "line": 120,
-                  "column": 10
-                }
-              }
-            }
-          ]
         }
       ]
     },
@@ -1680,14 +1642,14 @@
       "exitCode": 1,
       "summary": {
         "errors": 1,
-        "warnings": 14,
+        "warnings": 12,
         "info": 0,
         "documents": 1
       },
       "verification": {
-        "verifiedStructuralClaims": 16,
+        "verifiedStructuralClaims": 18,
         "contradictedStructuralClaims": 1,
-        "unverifiedStructuralClaims": 13,
+        "unverifiedStructuralClaims": 11,
         "freeFormProseEvaluated": false
       },
       "diagnostics": [
@@ -1731,25 +1693,6 @@
         },
         {
           "ruleId": "VDOC-G008",
-          "message": "The type of `url` is not precise enough to compare.",
-          "evidence": [
-            {
-              "path": "httpx/_api.py",
-              "range": {
-                "start": {
-                  "line": 41,
-                  "column": 5
-                },
-                "end": {
-                  "line": 41,
-                  "column": 19
-                }
-              }
-            }
-          ]
-        },
-        {
-          "ruleId": "VDOC-G008",
           "message": "The type of `params` is not precise enough to compare.",
           "evidence": [
             {
@@ -1956,25 +1899,6 @@
               }
             }
           ]
-        },
-        {
-          "ruleId": "VDOC-G008",
-          "message": "The return type is not precise enough to compare.",
-          "evidence": [
-            {
-              "path": "httpx/_api.py",
-              "range": {
-                "start": {
-                  "line": 39,
-                  "column": 1
-                },
-                "end": {
-                  "line": 120,
-                  "column": 10
-                }
-              }
-            }
-          ]
         }
       ]
     },
@@ -1982,36 +1906,17 @@
       "exitCode": 0,
       "summary": {
         "errors": 0,
-        "warnings": 9,
+        "warnings": 6,
         "info": 0,
         "documents": 1
       },
       "verification": {
-        "verifiedStructuralClaims": 8,
+        "verifiedStructuralClaims": 11,
         "contradictedStructuralClaims": 0,
-        "unverifiedStructuralClaims": 9,
+        "unverifiedStructuralClaims": 6,
         "freeFormProseEvaluated": false
       },
       "diagnostics": [
-        {
-          "ruleId": "VDOC-G008",
-          "message": "The type of `url` is not precise enough to compare.",
-          "evidence": [
-            {
-              "path": "httpx/_client.py",
-              "range": {
-                "start": {
-                  "line": 1038,
-                  "column": 9
-                },
-                "end": {
-                  "line": 1038,
-                  "column": 23
-                }
-              }
-            }
-          ]
-        },
         {
           "ruleId": "VDOC-G008",
           "message": "The type of `params` is not precise enough to compare.",
@@ -2090,25 +1995,6 @@
         },
         {
           "ruleId": "VDOC-G008",
-          "message": "The type of `follow_redirects` is not precise enough to compare.",
-          "evidence": [
-            {
-              "path": "httpx/_client.py",
-              "range": {
-                "start": {
-                  "line": 1044,
-                  "column": 9
-                },
-                "end": {
-                  "line": 1044,
-                  "column": 50
-                }
-              }
-            }
-          ]
-        },
-        {
-          "ruleId": "VDOC-G008",
           "message": "The type of `timeout` is not precise enough to compare.",
           "evidence": [
             {
@@ -2144,25 +2030,6 @@
               }
             }
           ]
-        },
-        {
-          "ruleId": "VDOC-G008",
-          "message": "The return type is not precise enough to compare.",
-          "evidence": [
-            {
-              "path": "httpx/_client.py",
-              "range": {
-                "start": {
-                  "line": 1036,
-                  "column": 5
-                },
-                "end": {
-                  "line": 1063,
-                  "column": 10
-                }
-              }
-            }
-          ]
         }
       ]
     },
@@ -2170,14 +2037,14 @@
       "exitCode": 1,
       "summary": {
         "errors": 1,
-        "warnings": 9,
+        "warnings": 7,
         "info": 0,
         "documents": 1
       },
       "verification": {
-        "verifiedStructuralClaims": 7,
+        "verifiedStructuralClaims": 9,
         "contradictedStructuralClaims": 1,
-        "unverifiedStructuralClaims": 8,
+        "unverifiedStructuralClaims": 6,
         "freeFormProseEvaluated": false
       },
       "diagnostics": [
@@ -2297,7 +2164,288 @@
         },
         {
           "ruleId": "VDOC-G008",
-          "message": "The type of `follow_redirects` is not precise enough to compare.",
+          "message": "The type of `timeout` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1045,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1045,
+                  "column": 49
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `extensions` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1046,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1046,
+                  "column": 45
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "boundSubclassWrongType_url": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 1,
+        "warnings": 6,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 10,
+        "contradictedStructuralClaims": 1,
+        "unverifiedStructuralClaims": 6,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G005",
+          "message": "Parameter `url` is documented as `int` but the source type is `URL | str`.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1038,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1038,
+                  "column": 23
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `params` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1040,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1040,
+                  "column": 39
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `headers` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1041,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1041,
+                  "column": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `cookies` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1042,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1042,
+                  "column": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `auth` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1043,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1043,
+                  "column": 50
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `timeout` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1045,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1045,
+                  "column": 49
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `extensions` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1046,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1046,
+                  "column": 45
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "boundSubclassWrongType_follow_redirects": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 1,
+        "warnings": 6,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 10,
+        "contradictedStructuralClaims": 1,
+        "unverifiedStructuralClaims": 6,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `params` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1040,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1040,
+                  "column": 39
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `headers` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1041,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1041,
+                  "column": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `cookies` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1042,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1042,
+                  "column": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `auth` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1043,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1043,
+                  "column": 50
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G005",
+          "message": "Parameter `follow_redirects` is documented as `int` but the source type is `bool | UseClientDefault`.",
           "evidence": [
             {
               "path": "httpx/_client.py",
@@ -2351,10 +2499,291 @@
               }
             }
           ]
+        }
+      ]
+    },
+    "boundSubclassWrongReturn": {
+      "exitCode": 1,
+      "summary": {
+        "errors": 1,
+        "warnings": 6,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 10,
+        "contradictedStructuralClaims": 1,
+        "unverifiedStructuralClaims": 6,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `params` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1040,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1040,
+                  "column": 39
+                }
+              }
+            }
+          ]
         },
         {
           "ruleId": "VDOC-G008",
-          "message": "The return type is not precise enough to compare.",
+          "message": "The type of `headers` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1041,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1041,
+                  "column": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `cookies` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1042,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1042,
+                  "column": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `auth` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1043,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1043,
+                  "column": 50
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `timeout` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1045,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1045,
+                  "column": 49
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `extensions` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1046,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1046,
+                  "column": 45
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G006",
+          "message": "Return type is documented as `str` but the source type is `Response`.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1036,
+                  "column": 5
+                },
+                "end": {
+                  "line": 1063,
+                  "column": 10
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "boundSubclassUnknownReturnAlias": {
+      "exitCode": 0,
+      "summary": {
+        "errors": 0,
+        "warnings": 7,
+        "info": 0,
+        "documents": 1
+      },
+      "verification": {
+        "verifiedStructuralClaims": 10,
+        "contradictedStructuralClaims": 0,
+        "unverifiedStructuralClaims": 7,
+        "freeFormProseEvaluated": false
+      },
+      "diagnostics": [
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `params` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1040,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1040,
+                  "column": 39
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `headers` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1041,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1041,
+                  "column": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `cookies` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1042,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1042,
+                  "column": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `auth` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1043,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1043,
+                  "column": 50
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `timeout` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1045,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1045,
+                  "column": 49
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The type of `extensions` is not precise enough to compare.",
+          "evidence": [
+            {
+              "path": "httpx/_client.py",
+              "range": {
+                "start": {
+                  "line": 1046,
+                  "column": 9
+                },
+                "end": {
+                  "line": 1046,
+                  "column": 45
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "VDOC-G008",
+          "message": "The documented return type uses an unsupported spelling or unresolved alias.",
           "evidence": [
             {
               "path": "httpx/_client.py",

@@ -47,7 +47,7 @@ native = (CHECKOUT / "docs/api.md").read_text()
 results = {
     "repository": "https://github.com/encode/httpx", "revision": REVISION,
     "vibedocBaseRevision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-    "implementation": "Same-file single-inheritance confidence for directly declared Python methods",
+    "implementation": "Bounded Python project imports, assignment aliases, and typing forms",
     "adapter": replies[0]["result"]["adapter"],
     "nativeDocument": {"path": "docs/api.md", "sha256": hashlib.sha256(native.encode()).hexdigest()},
     "facts": {"files": len(graph["files"]), "symbols": len(graph["symbols"]),
@@ -111,16 +111,36 @@ with tempfile.TemporaryDirectory(prefix=".vibedoc-httpx-", dir=CHECKOUT) as dire
         error = next(d for d in wrong["diagnostics"] if d["ruleId"] == "VDOC-G006")
         assert error["evidence"][0] == selected["Response.read"]["declaration"]
         document.write_text(reference(selected["request"]))
-        check("boundRequest", document, [18, 0, 13])
+        check("boundRequest", document, [20, 0, 11])
         document.write_text(reference(selected["request"]).replace(f"{TICK}method{TICK}: {TICK}str{TICK}", f"{TICK}missing{TICK}: {TICK}str{TICK}"))
-        wrong = check("boundRequestWrongParameter", document, [16, 1, 13])
+        wrong = check("boundRequestWrongParameter", document, [18, 1, 11])
         assert any(d["ruleId"] == "VDOC-G003" for d in wrong["diagnostics"])
         document.write_text(reference(selected["Client.get"]))
-        check("boundSubclassMethod", document, [8, 0, 9])
+        check("boundSubclassMethod", document, [11, 0, 6])
         document.write_text(reference(selected["Client.get"]).replace(f"{TICK}url{TICK}:", f"{TICK}missing{TICK}:"))
-        wrong = check("boundSubclassWrongParameter", document, [7, 1, 8])
+        wrong = check("boundSubclassWrongParameter", document, [9, 1, 6])
         error = next(d for d in wrong["diagnostics"] if d["ruleId"] == "VDOC-G003")
         assert error["evidence"][0] == selected["Client.get"]["declaration"]
+        get_signature = selected["Client.get"]["signatures"][0]
+        for parameter in get_signature["parameters"]:
+            expected = "exact" if parameter["name"] in {"url", "follow_redirects"} else "incomplete"
+            assert parameter["typeFact"]["confidence"] == expected
+        assert get_signature["returnType"] == {
+            "display": "Response", "normalized": "httpx._models.Response", "confidence": "exact"}
+        for parameter_name, original_type in (("url", "URL | str"), ("follow_redirects", "bool | UseClientDefault")):
+            document.write_text(reference(selected["Client.get"]).replace(
+                f"{TICK}{parameter_name}{TICK}: {TICK}{original_type}{TICK}",
+                f"{TICK}{parameter_name}{TICK}: {TICK}int{TICK}"))
+            wrong = check("boundSubclassWrongType_" + parameter_name, document, [10, 1, 6])
+            error = next(d for d in wrong["diagnostics"] if d["ruleId"] == "VDOC-G005")
+            parameter = next(p for p in get_signature["parameters"] if p["name"] == parameter_name)
+            assert error["evidence"][0] == parameter["location"]
+        document.write_text(reference(selected["Client.get"], "str"))
+        wrong = check("boundSubclassWrongReturn", document, [10, 1, 6])
+        error = next(d for d in wrong["diagnostics"] if d["ruleId"] == "VDOC-G006")
+        assert error["evidence"][0] == selected["Client.get"]["declaration"]
+        document.write_text(reference(selected["Client.get"], "UnknownResponseAlias"))
+        check("boundSubclassUnknownReturnAlias", document, [10, 0, 7])
         assert selected["Client.close"]["confidence"] == "exact"
         assert selected["Client.close"]["signatures"][0]["returnType"] == {
             "display": "None", "normalized": "None", "confidence": "exact"}
